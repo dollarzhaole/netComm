@@ -5,9 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.crscd.cds.ctc.protocol.NegotiationRequestPackage;
 import com.crscd.cds.ctc.protocol.PackageType;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.EventLoop;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
@@ -26,14 +24,12 @@ public class NettyClientHandler extends SimpleChannelInboundHandler {
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
-        System.out.println("service send message" + o.toString());
+        System.out.println("service send message " + o.toString());
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("output connected!");
-
-        
 
         NegotiationRequestPackage pkt = new NegotiationRequestPackage();
         pkt.setClientId(0x11);
@@ -42,9 +38,12 @@ public class NettyClientHandler extends SimpleChannelInboundHandler {
         pkt.setSeq(0L);
         pkt.setType(PackageType.NEGOTIATION_REQUEST);
 
-        ctx.channel().writeAndFlush(pkt).sync();
-
-        System.out.println("send negotiation package");
+        ctx.channel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                System.out.println("send negotiation package " + channelFuture.isSuccess());
+            }
+        });
 
         attempts = 0;
     }

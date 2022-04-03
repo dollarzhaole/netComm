@@ -3,7 +3,10 @@ package com.crscd.cds.ctc.client;
 
 import java.util.concurrent.TimeUnit;
 
+import com.crscd.cds.ctc.codec.PackageDecoder;
 import com.crscd.cds.ctc.codec.PackageEncoder;
+import com.crscd.cds.ctc.protocol.NegotiationRequestPackage;
+import com.crscd.cds.ctc.protocol.PackageType;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -47,15 +50,15 @@ public class NettyClient {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,
-                                Unpooled.copiedBuffer(System.getProperty("line.separator").getBytes())));
+//                        pipeline.addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,
+//                                Unpooled.copiedBuffer(System.getProperty("line.separator").getBytes())));
+                        pipeline.addLast("decoder", new PackageDecoder());
+                        pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
                         //字符串编码解码
-                        pipeline.addLast("decoder", new StringDecoder());
                         pipeline.addLast("encoder", new PackageEncoder());
                         //心跳检测
-                        pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
+//                        pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
                         //客户端的逻辑
-                        pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
 
                     }
                 });
@@ -78,7 +81,7 @@ public class NettyClient {
                     }, 1L, TimeUnit.SECONDS);
                 } else {
                     channel = channelFuture.channel();
-                    System.out.println("connected");
+                    System.out.println("connected" + channel);
                 }
             }
         });
@@ -91,5 +94,24 @@ public class NettyClient {
     public static void main(String[] args) {
         NettyClient nettyClient = new NettyClient("10.2.54.251", 8001);
         nettyClient.start();
+
+        NegotiationRequestPackage pkt = new NegotiationRequestPackage();
+        pkt.setClientId(0x11);
+        pkt.setLength(7L);
+        pkt.setVersion(1L);
+        pkt.setSeq(0L);
+        pkt.setType(PackageType.NEGOTIATION_REQUEST);
+
+        try {
+            Thread.sleep(1000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        nettyClient.getChannel().writeAndFlush(Unpooled.buffer(10)).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                System.out.println("send " + channelFuture.isSuccess());
+            }
+        });
     }
 }
