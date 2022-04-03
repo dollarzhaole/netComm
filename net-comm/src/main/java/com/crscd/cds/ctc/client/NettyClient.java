@@ -1,8 +1,9 @@
-package com.crscd.cds.protocol;
+package com.crscd.cds.ctc.client;
 
 
 import java.util.concurrent.TimeUnit;
 
+import com.crscd.cds.ctc.codec.PackageEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -50,7 +51,7 @@ public class NettyClient {
                                 Unpooled.copiedBuffer(System.getProperty("line.separator").getBytes())));
                         //字符串编码解码
                         pipeline.addLast("decoder", new StringDecoder());
-                        pipeline.addLast("encoder", new StringEncoder());
+                        pipeline.addLast("encoder", new PackageEncoder());
                         //心跳检测
                         pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
                         //客户端的逻辑

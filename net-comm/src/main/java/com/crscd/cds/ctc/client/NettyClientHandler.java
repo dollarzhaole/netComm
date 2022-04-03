@@ -1,9 +1,10 @@
-package com.crscd.cds.protocol;
+package com.crscd.cds.ctc.client;
 
 
 import java.util.concurrent.TimeUnit;
 
-import io.netty.buffer.ByteBuf;
+import com.crscd.cds.ctc.protocol.NegotiationRequestPackage;
+import com.crscd.cds.ctc.protocol.PackageType;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoop;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -31,6 +32,20 @@ public class NettyClientHandler extends SimpleChannelInboundHandler {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("output connected!");
+
+        
+
+        NegotiationRequestPackage pkt = new NegotiationRequestPackage();
+        pkt.setClientId(0x11);
+        pkt.setLength(7L);
+        pkt.setVersion(1L);
+        pkt.setSeq(0L);
+        pkt.setType(PackageType.NEGOTIATION_REQUEST);
+
+        ctx.channel().writeAndFlush(pkt).sync();
+
+        System.out.println("send negotiation package");
+
         attempts = 0;
     }
 

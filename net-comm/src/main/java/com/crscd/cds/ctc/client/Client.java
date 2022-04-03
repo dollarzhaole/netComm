@@ -1,4 +1,4 @@
-package com.crscd.cds.protocol;
+package com.crscd.cds.ctc.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
