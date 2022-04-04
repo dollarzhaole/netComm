@@ -81,7 +81,7 @@ public class NettyClient {
                     }, 1L, TimeUnit.SECONDS);
                 } else {
                     channel = channelFuture.channel();
-                    System.out.println("connected" + channel);
+                    System.out.println("connected: " + channel);
                 }
             }
         });
@@ -103,15 +103,17 @@ public class NettyClient {
         pkt.setType(PackageType.NEGOTIATION_REQUEST);
 
         try {
-            Thread.sleep(1000L);
+            Thread.sleep(10000L);
+            nettyClient.getChannel().writeAndFlush(pkt).sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        nettyClient.getChannel().writeAndFlush(Unpooled.buffer(10)).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                System.out.println("send " + channelFuture.isSuccess());
-            }
-        });
+
+//        nettyClient.getChannel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
+//            @Override
+//            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+//                System.out.println("send " + channelFuture.isSuccess());
+//            }
+//        });
     }
 }

@@ -5,13 +5,13 @@ package com.crscd.cds.ctc.protocol;
  * @date 2022-04-02
  */
 public class NegotiationRequestPackage extends MessagePackage{
-    private int clientId;
+    private Integer clientId;
 
-    public int getClientId() {
+    public Integer getClientId() {
         return clientId;
     }
 
-    public void setClientId(int clientId) {
+    public void setClientId(Integer clientId) {
         this.clientId = clientId;
     }
 }

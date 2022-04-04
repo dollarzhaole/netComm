@@ -5,10 +5,10 @@ package com.crscd.cds.ctc.protocol;
  * @date 2022-04-02
  */
 public class MessagePackage {
-    private Long version;
-    private Long length;
-    private Short type;
-    private Long seq;
+    protected Long version;
+    protected Long length;
+    protected Short type;
+    protected Long seq;
 
     public Long getVersion() {
         return version;
