@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.client;
 
 
+import java.nio.ByteOrder;
 import java.util.concurrent.TimeUnit;
 
 import com.crscd.cds.ctc.codec.PackageDecoder;
@@ -21,6 +22,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -34,6 +36,8 @@ public class NettyClient {
     private int port;
     private Channel channel;
     private Bootstrap b = null;
+
+    private static final int MAX_PACKAGE_LENGTH = Integer.MAX_VALUE;
 
     public NettyClient(String host, int port) {
         this.host = host;
@@ -52,10 +56,10 @@ public class NettyClient {
                         ChannelPipeline pipeline = socketChannel.pipeline();
 //                        pipeline.addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,
 //                                Unpooled.copiedBuffer(System.getProperty("line.separator").getBytes())));
+                        pipeline.addLast("LengthFieldBasedFrameDecoder", new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, MAX_PACKAGE_LENGTH, 4, 4, 5, 0, true));
                         pipeline.addLast("decoder", new PackageDecoder());
-                        pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
-                        //字符串编码解码
                         pipeline.addLast("encoder", new PackageEncoder());
+                        pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
                         //心跳检测
 //                        pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
                         //客户端的逻辑
@@ -81,7 +85,6 @@ public class NettyClient {
                     }, 1L, TimeUnit.SECONDS);
                 } else {
                     channel = channelFuture.channel();
-                    System.out.println("connected: " + channel);
                 }
             }
         });
@@ -95,19 +98,19 @@ public class NettyClient {
         NettyClient nettyClient = new NettyClient("10.2.54.251", 8001);
         nettyClient.start();
 
-        NegotiationRequestPackage pkt = new NegotiationRequestPackage();
-        pkt.setClientId(0x11);
-        pkt.setLength(7L);
-        pkt.setVersion(1L);
-        pkt.setSeq(0L);
-        pkt.setType(PackageType.NEGOTIATION_REQUEST);
-
-        try {
-            Thread.sleep(10000L);
-            nettyClient.getChannel().writeAndFlush(pkt).sync();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        NegotiationRequestPackage pkt = new NegotiationRequestPackage();
+//        pkt.setClientId(0x11);
+//        pkt.setLength(7L);
+//        pkt.setVersion(1L);
+//        pkt.setSeq(0L);
+//        pkt.setType(PackageType.NEGOTIATION_REQUEST);
+//
+//        try {
+//            Thread.sleep(10000L);
+//            nettyClient.getChannel().writeAndFlush(pkt).sync();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
 //        nettyClient.getChannel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
 //            @Override

@@ -41,4 +41,14 @@ public class MessagePackage {
     public void setSeq(Long seq) {
         this.seq = seq;
     }
+
+    @Override
+    public String toString() {
+        return "MessagePackage{" +
+                "version=" + version +
+                ", length=" + length +
+                ", type=" + type +
+                ", seq=" + seq +
+                '}';
+    }
 }
