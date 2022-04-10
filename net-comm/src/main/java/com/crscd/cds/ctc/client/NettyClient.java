@@ -59,6 +59,7 @@ public class NettyClient {
                         pipeline.addLast("LengthFieldBasedFrameDecoder", new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, MAX_PACKAGE_LENGTH, 4, 4, 5, 0, true));
                         pipeline.addLast("decoder", new PackageDecoder());
                         pipeline.addLast("encoder", new PackageEncoder());
+                        pipeline.addLast("idleState", new IdleStateHandler(1, 1, 1));
                         pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
                         //心跳检测
 //                        pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));

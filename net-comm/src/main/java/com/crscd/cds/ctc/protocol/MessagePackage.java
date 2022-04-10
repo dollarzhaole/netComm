@@ -2,53 +2,25 @@ package com.crscd.cds.ctc.protocol;
 
 /**
  * @author zhaole
- * @date 2022-04-02
+ * @date 2022-04-08
  */
-public class MessagePackage {
-    protected Long version;
-    protected Long length;
-    protected Short type;
-    protected Long seq;
+public class MessagePackage<T> {
+    protected MessageHeader header;
+    protected T data;
 
-    public Long getVersion() {
-        return version;
+    public MessageHeader getHeader() {
+        return header;
     }
 
-    public void setVersion(Long version) {
-        this.version = version;
+    public void setHeader(MessageHeader header) {
+        this.header = header;
     }
 
-    public Long getLength() {
-        return length;
+    public T getData() {
+        return data;
     }
 
-    public void setLength(Long length) {
-        this.length = length;
-    }
-
-    public Short getType() {
-        return type;
-    }
-
-    public void setType(Short type) {
-        this.type = type;
-    }
-
-    public Long getSeq() {
-        return seq;
-    }
-
-    public void setSeq(Long seq) {
-        this.seq = seq;
-    }
-
-    @Override
-    public String toString() {
-        return "MessagePackage{" +
-                "version=" + version +
-                ", length=" + length +
-                ", type=" + type +
-                ", seq=" + seq +
-                '}';
+    public void setData(T data) {
+        this.data = data;
     }
 }

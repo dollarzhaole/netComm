@@ -3,20 +3,27 @@ package com.crscd.cds.ctc.client;
 
 import java.util.concurrent.TimeUnit;
 
+import com.crscd.cds.ctc.codec.PackageEncoder;
+import com.crscd.cds.ctc.protocol.MessageHeader;
 import com.crscd.cds.ctc.protocol.MessagePackage;
 import com.crscd.cds.ctc.protocol.NegotiationRequestPackage;
 import com.crscd.cds.ctc.protocol.PackageType;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author zhaole
  * @date 2022-03-26
  */
-public class NettyClientHandler extends SimpleChannelInboundHandler<MessagePackage> {
+public class NettyClientHandler extends SimpleChannelInboundHandler<MessageHeader> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NettyClientHandler.class);
+    private static final MessageHeader HEART_BEAT = MessageHeader.createHeartBeat(PackageEncoder.VERSION);
     private NettyClient nettyClient;
-    private String tenantId;
     private int attempts = 0;
 
     public NettyClientHandler(NettyClient nettyClient) {
@@ -24,45 +31,29 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<MessagePacka
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, MessagePackage o) {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, MessageHeader o) {
         System.out.println("recv from server: " + o.toString());
-
-//        NegotiationRequestPackage pkt = new NegotiationRequestPackage();
-//        // client id of tdci should be 129 ~ 159
-//        pkt.setClientId(129);
-//        pkt.setLength(2L);
-//        pkt.setVersion(1L);
-//        pkt.setSeq(0L);
-//        pkt.setType(PackageType.NEGOTIATION_REQUEST);
-//
-//        channelHandlerContext.channel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
-//            @Override
-//            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-//                System.out.println("send negotiation package " + channelFuture.isSuccess());
-//            }
-//        });
-
-//        channelHandlerContext.writeAndFlush(o);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext channelHandlerContext) throws Exception {
         System.out.println("connected: " + channelHandlerContext.channel().toString());
 
-        NegotiationRequestPackage pkt = new NegotiationRequestPackage();
-        // client id of tdci should be 129 ~ 159
-        pkt.setClientId(129);
-        pkt.setLength(2L);
-        pkt.setVersion(1L);
-        pkt.setSeq(0L);
-        pkt.setType(PackageType.NEGOTIATION_REQUEST);
+        MessagePackage<NegotiationRequestPackage> pkt = new MessagePackage<NegotiationRequestPackage>();
+        MessageHeader header = new MessageHeader();
+        NegotiationRequestPackage negotiationRequestPackage = new NegotiationRequestPackage();
 
-        channelHandlerContext.channel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                System.out.println("send negotiation package " + channelFuture.isSuccess());
-            }
-        });
+        // client id of tdci should be 129 ~ 159
+        negotiationRequestPackage.setClientId(129);
+        header.setLength(2L);
+        header.setVersion(1L);
+        header.setSeq(0L);
+        header.setType(PackageType.NEGOTIATION_REQUEST);
+        pkt.setHeader(header);
+        pkt.setData(negotiationRequestPackage);
+
+        channelHandlerContext.channel().writeAndFlush(pkt).sync();
+        LOGGER.debug("send negotiation package");
 
         attempts = 0;
     }
@@ -87,18 +78,17 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<MessagePacka
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-//        if (evt instanceof IdleStateEvent) {
-//            IdleStateEvent event = (IdleStateEvent) evt;
-//            if (event.state().equals(IdleState.READER_IDLE)) {
-//                System.out.println("READER_IDLE");
-//            } else if (event.state().equals(IdleState.WRITER_IDLE)) {
-//                //发送心跳，保持长连接
-//                String s = "NettyClient" + System.getProperty("line.separator");
-//                ctx.channel().writeAndFlush(s);  //发送心跳成功
-//            } else if (event.state().equals(IdleState.ALL_IDLE)) {
-//                System.out.println("ALL_IDLE");
-//            }
-//        }
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent event = (IdleStateEvent) evt;
+            if (event.state().equals(IdleState.READER_IDLE)) {
+                LOGGER.debug("read idle from {}", ctx.channel());
+            } else if (event.state().equals(IdleState.WRITER_IDLE)) {
+                ctx.channel().writeAndFlush(HEART_BEAT);  //发送心跳成功
+                LOGGER.debug("write heart beat to {}", ctx.channel());
+            } else if (event.state().equals(IdleState.ALL_IDLE)) {
+                LOGGER.debug("all idle on {}", ctx.channel());
+            }
+        }
         super.userEventTriggered(ctx, evt);
     }
 }

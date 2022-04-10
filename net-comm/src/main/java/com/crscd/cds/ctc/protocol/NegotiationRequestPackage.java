@@ -4,7 +4,7 @@ package com.crscd.cds.ctc.protocol;
  * @author zhaole
  * @date 2022-04-02
  */
-public class NegotiationRequestPackage extends MessagePackage{
+public class NegotiationRequestPackage {
     private Integer clientId;
 
     public Integer getClientId() {
