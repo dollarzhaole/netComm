@@ -18,6 +18,8 @@ public class PackageDecoder extends ByteToMessageDecoder {
     private static final Logger LOGGER = LoggerFactory.getLogger(PackageDecoder.class);
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+        LOGGER.debug("PackageDecoder decode, byteBuf={}", byteBuf);
+
         MessageHeader header = new MessageHeader();
 
         long version = byteBuf.readUnsignedIntLE();

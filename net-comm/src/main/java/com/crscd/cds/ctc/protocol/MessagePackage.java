@@ -8,6 +8,24 @@ public class MessagePackage<T> {
     protected MessageHeader header;
     protected T data;
 
+    public static <T> MessagePackage<T> create(MessageHeader header, T data) {
+        MessagePackage<T> pkt = new MessagePackage<T>();
+        pkt.header = header;
+        pkt.data = data;
+
+        return pkt;
+    }
+
+    public static MessagePackage<Object> createHeartBeat() {
+        MessagePackage<Object> pkt = new MessagePackage<Object>();
+        MessageHeader header = new MessageHeader();
+        header.version = (long) 0x01;
+        header.type = PackageType.HEART_BEAT;
+        pkt.setHeader(header);
+
+        return pkt;
+    }
+
     public MessageHeader getHeader() {
         return header;
     }

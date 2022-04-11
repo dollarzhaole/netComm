@@ -56,11 +56,13 @@ public class NettyClient {
                         ChannelPipeline pipeline = socketChannel.pipeline();
 //                        pipeline.addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,
 //                                Unpooled.copiedBuffer(System.getProperty("line.separator").getBytes())));
+                        pipeline.addLast("idleState", new IdleStateHandler(2, 2, 2));
+                        pipeline.addLast("hb", new HeartBeatHandler());
                         pipeline.addLast("LengthFieldBasedFrameDecoder", new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, MAX_PACKAGE_LENGTH, 4, 4, 5, 0, true));
                         pipeline.addLast("decoder", new PackageDecoder());
-                        pipeline.addLast("encoder", new PackageEncoder());
-                        pipeline.addLast("idleState", new IdleStateHandler(1, 1, 1));
                         pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
+                        pipeline.addLast("encoder", new PackageEncoder());
+                        pipeline.addLast("test1", new OutBoundTestHandler());
                         //心跳检测
 //                        pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
                         //客户端的逻辑
@@ -98,26 +100,5 @@ public class NettyClient {
     public static void main(String[] args) {
         NettyClient nettyClient = new NettyClient("10.2.54.251", 8001);
         nettyClient.start();
-
-//        NegotiationRequestPackage pkt = new NegotiationRequestPackage();
-//        pkt.setClientId(0x11);
-//        pkt.setLength(7L);
-//        pkt.setVersion(1L);
-//        pkt.setSeq(0L);
-//        pkt.setType(PackageType.NEGOTIATION_REQUEST);
-//
-//        try {
-//            Thread.sleep(10000L);
-//            nettyClient.getChannel().writeAndFlush(pkt).sync();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
-//        nettyClient.getChannel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
-//            @Override
-//            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-//                System.out.println("send " + channelFuture.isSuccess());
-//            }
-//        });
     }
 }

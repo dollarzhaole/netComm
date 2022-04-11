@@ -53,7 +53,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<MessageHeade
         pkt.setData(negotiationRequestPackage);
 
         channelHandlerContext.channel().writeAndFlush(pkt).sync();
-        LOGGER.debug("send negotiation package");
+        LOGGER.debug("send negotiation package, pkt={}", pkt);
 
         attempts = 0;
     }
@@ -76,19 +76,20 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<MessageHeade
         ctx.fireChannelInactive();
     }
 
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent event = (IdleStateEvent) evt;
-            if (event.state().equals(IdleState.READER_IDLE)) {
-                LOGGER.debug("read idle from {}", ctx.channel());
-            } else if (event.state().equals(IdleState.WRITER_IDLE)) {
-                ctx.channel().writeAndFlush(HEART_BEAT);  //发送心跳成功
-                LOGGER.debug("write heart beat to {}", ctx.channel());
-            } else if (event.state().equals(IdleState.ALL_IDLE)) {
-                LOGGER.debug("all idle on {}", ctx.channel());
-            }
-        }
-        super.userEventTriggered(ctx, evt);
-    }
+//    @Override
+//    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+//        if (evt instanceof IdleStateEvent) {
+//            IdleStateEvent event = (IdleStateEvent) evt;
+//            if (event.state().equals(IdleState.READER_IDLE)) {
+//                LOGGER.debug("read idle from {}", ctx.channel());
+//            } else if (event.state().equals(IdleState.WRITER_IDLE)) {
+//                LOGGER.debug("before write heart beat to {}", ctx.channel());
+//                ctx.channel().writeAndFlush(HEART_BEAT).sync();  //发送心跳成功
+//                LOGGER.debug("after write heart beat to {}", ctx.channel());
+//            } else if (event.state().equals(IdleState.ALL_IDLE)) {
+//                LOGGER.debug("all idle on {}", ctx.channel());
+//            }
+//        }
+//        super.userEventTriggered(ctx, evt);
+//    }
 }
