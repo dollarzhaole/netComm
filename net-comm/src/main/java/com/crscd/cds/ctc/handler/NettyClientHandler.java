@@ -1,18 +1,15 @@
-package com.crscd.cds.ctc.client;
+package com.crscd.cds.ctc.handler;
 
 
 import java.util.concurrent.TimeUnit;
 
-import com.crscd.cds.ctc.codec.PackageEncoder;
-import com.crscd.cds.ctc.protocol.MessageHeader;
-import com.crscd.cds.ctc.protocol.MessagePackage;
-import com.crscd.cds.ctc.protocol.NegotiationRequestPackage;
+import com.crscd.cds.ctc.client.NettyClient;
+import com.crscd.cds.ctc.codec.HeaderEncoder;
+import com.crscd.cds.ctc.protocol.PackageHeader;
+import com.crscd.cds.ctc.protocol.Package;
+import com.crscd.cds.ctc.protocol.NegotiationRequestMessage;
 import com.crscd.cds.ctc.protocol.PackageType;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +17,9 @@ import org.slf4j.LoggerFactory;
  * @author zhaole
  * @date 2022-03-26
  */
-public class NettyClientHandler extends SimpleChannelInboundHandler<MessageHeader> {
+public class NettyClientHandler extends SimpleChannelInboundHandler<PackageHeader> {
     private static final Logger LOGGER = LoggerFactory.getLogger(NettyClientHandler.class);
-    private static final MessageHeader HEART_BEAT = MessageHeader.createHeartBeat(PackageEncoder.VERSION);
+    private static final PackageHeader HEART_BEAT = PackageHeader.createHeartBeat(HeaderEncoder.VERSION);
     private NettyClient nettyClient;
     private int attempts = 0;
 
@@ -31,7 +28,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<MessageHeade
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, MessageHeader o) {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, PackageHeader o) {
         System.out.println("recv from server: " + o.toString());
     }
 
@@ -39,9 +36,9 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<MessageHeade
     public void channelActive(ChannelHandlerContext channelHandlerContext) throws Exception {
         System.out.println("connected: " + channelHandlerContext.channel().toString());
 
-        MessagePackage<NegotiationRequestPackage> pkt = new MessagePackage<NegotiationRequestPackage>();
-        MessageHeader header = new MessageHeader();
-        NegotiationRequestPackage negotiationRequestPackage = new NegotiationRequestPackage();
+        Package<NegotiationRequestMessage> pkt = new Package<NegotiationRequestMessage>();
+        PackageHeader header = new PackageHeader();
+        NegotiationRequestMessage negotiationRequestPackage = new NegotiationRequestMessage();
 
         // client id of tdci should be 129 ~ 159
         negotiationRequestPackage.setClientId(129);

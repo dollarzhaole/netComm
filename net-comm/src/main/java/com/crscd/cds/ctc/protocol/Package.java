@@ -4,21 +4,21 @@ package com.crscd.cds.ctc.protocol;
  * @author zhaole
  * @date 2022-04-08
  */
-public class MessagePackage<T> {
-    protected MessageHeader header;
+public class Package<T extends Message> {
+    protected PackageHeader header;
     protected T data;
 
-    public static <T> MessagePackage<T> create(MessageHeader header, T data) {
-        MessagePackage<T> pkt = new MessagePackage<T>();
+    public static <T extends Message> Package<T> create(PackageHeader header, T data) {
+        Package<T> pkt = new Package<T>();
         pkt.header = header;
         pkt.data = data;
 
         return pkt;
     }
 
-    public static MessagePackage<Object> createHeartBeat() {
-        MessagePackage<Object> pkt = new MessagePackage<Object>();
-        MessageHeader header = new MessageHeader();
+    public static Package<Message> createHeartBeat() {
+        Package<Message> pkt = new Package<Message>();
+        PackageHeader header = new PackageHeader();
         header.version = (long) 0x01;
         header.type = PackageType.HEART_BEAT;
         pkt.setHeader(header);
@@ -26,11 +26,11 @@ public class MessagePackage<T> {
         return pkt;
     }
 
-    public MessageHeader getHeader() {
+    public PackageHeader getHeader() {
         return header;
     }
 
-    public void setHeader(MessageHeader header) {
+    public void setHeader(PackageHeader header) {
         this.header = header;
     }
 

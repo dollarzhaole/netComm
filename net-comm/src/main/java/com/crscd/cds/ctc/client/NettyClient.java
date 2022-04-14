@@ -4,12 +4,10 @@ package com.crscd.cds.ctc.client;
 import java.nio.ByteOrder;
 import java.util.concurrent.TimeUnit;
 
-import com.crscd.cds.ctc.codec.PackageDecoder;
-import com.crscd.cds.ctc.codec.PackageEncoder;
-import com.crscd.cds.ctc.protocol.NegotiationRequestPackage;
-import com.crscd.cds.ctc.protocol.PackageType;
+import com.crscd.cds.ctc.codec.ApplicationDataDecoder;
+import com.crscd.cds.ctc.codec.HeaderEncoder;
+import com.crscd.cds.ctc.handler.*;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -21,10 +19,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 
 /**
@@ -35,7 +30,7 @@ public class NettyClient {
     private String host;
     private int port;
     private Channel channel;
-    private Bootstrap b = null;
+    private Bootstrap bootstrap = null;
 
     private static final int MAX_PACKAGE_LENGTH = Integer.MAX_VALUE;
 
@@ -46,33 +41,29 @@ public class NettyClient {
     }
 
     private void init() {
-        b = new Bootstrap();
+        bootstrap = new Bootstrap();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-        b.group(workerGroup).option(ChannelOption.SO_KEEPALIVE, true)
+        bootstrap.group(workerGroup).option(ChannelOption.SO_KEEPALIVE, true)
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-//                        pipeline.addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,
-//                                Unpooled.copiedBuffer(System.getProperty("line.separator").getBytes())));
                         pipeline.addLast("idleState", new IdleStateHandler(2, 2, 2));
                         pipeline.addLast("hb", new HeartBeatHandler());
                         pipeline.addLast("LengthFieldBasedFrameDecoder", new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, MAX_PACKAGE_LENGTH, 4, 4, 5, 0, true));
-                        pipeline.addLast("decoder", new PackageDecoder());
+                        pipeline.addLast("PackageChannelInboundHandler", new PackageChannelInboundHandler());
+                        pipeline.addLast("DoubleNetSeqInboundHandler", new DoubleNetSeqInboundHandler());
+                        pipeline.addLast("ForwardInboundHandler", new ForwardInboundHandler());
+                        pipeline.addLast("decoder", new ApplicationDataDecoder());
                         pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
-                        pipeline.addLast("encoder", new PackageEncoder());
-                        pipeline.addLast("test1", new OutBoundTestHandler());
-                        //心跳检测
-//                        pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
-                        //客户端的逻辑
-
+                        pipeline.addLast("encoder", new HeaderEncoder());
                     }
                 });
     }
 
     public void start() {
-        ChannelFuture f = b.connect(host, port);
+        ChannelFuture f = bootstrap.connect(host, port);
         //断线重连
         f.addListener(new ChannelFutureListener() {
             @Override

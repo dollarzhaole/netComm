@@ -1,8 +1,8 @@
 package com.crscd.cds.ctc.codec;
 
-import com.crscd.cds.ctc.protocol.MessageData;
-import com.crscd.cds.ctc.protocol.MessageHeader;
-import com.crscd.cds.ctc.protocol.MessagePackage;
+import com.crscd.cds.ctc.protocol.Message;
+import com.crscd.cds.ctc.protocol.PackageHeader;
+import com.crscd.cds.ctc.protocol.Package;
 import com.crscd.cds.ctc.utils.ReflectionUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,17 +18,17 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author zhaole
  * @date 2022-04-02
  */
-public class PackageEncoder extends MessageToByteEncoder<MessagePackage<Object>> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PackageEncoder.class);
+public class HeaderEncoder extends MessageToByteEncoder<Package<Message>> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HeaderEncoder.class);
     public static final int VERSION = 0x01;
     private static final int OFFSET_LENGTH = 4;
     private final AtomicLong packageSeq = new AtomicLong(0);
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, MessagePackage<Object> msg, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext channelHandlerContext, Package<Message> msg, ByteBuf out) throws Exception {
         LOGGER.debug("PackageEncoder, msg={}", msg);
 
-        MessageHeader header = msg.getHeader();
+        PackageHeader header = msg.getHeader();
         out.writeIntLE(VERSION);
         out.writeIntLE(0);
         out.writeByte(header.getType());
@@ -60,6 +60,6 @@ public class PackageEncoder extends MessageToByteEncoder<MessagePackage<Object>>
             }
         }
 
-        out.setIntLE(out.readerIndex() + OFFSET_LENGTH, out.readableBytes() - MessageHeader.HEADER_LENGTH);
+        out.setIntLE(out.readerIndex() + OFFSET_LENGTH, out.readableBytes() - PackageHeader.HEADER_LENGTH);
     }
 }

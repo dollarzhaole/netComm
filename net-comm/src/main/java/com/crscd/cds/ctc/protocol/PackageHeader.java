@@ -1,19 +1,17 @@
 package com.crscd.cds.ctc.protocol;
 
-import io.netty.buffer.Unpooled;
-
 /**
  * @author zhaole
  * @date 2022-04-02
  */
-public class MessageHeader {
+public class PackageHeader {
     protected Long version;
     protected Long length;
     protected Short type;
     protected Long seq;
 
-    public static MessageHeader createHeartBeat(int version) {
-        MessageHeader header = new MessageHeader();
+    public static PackageHeader createHeartBeat(int version) {
+        PackageHeader header = new PackageHeader();
         header.version = (long) version;
         header.type = PackageType.HEART_BEAT;
         return header;

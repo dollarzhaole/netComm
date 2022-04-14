@@ -4,7 +4,7 @@ package com.crscd.cds.ctc.protocol;
  * @author zhaole
  * @date 2022-04-02
  */
-public class NegotiationResponsePackage {
+public class NegotiationResponseMessage {
     private Short window;
     private Short confirm;
     private Short overTime;
