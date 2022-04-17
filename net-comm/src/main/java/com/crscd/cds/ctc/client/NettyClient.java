@@ -5,8 +5,12 @@ import java.nio.ByteOrder;
 import java.util.concurrent.TimeUnit;
 
 import com.crscd.cds.ctc.codec.ApplicationDataDecoder;
+import com.crscd.cds.ctc.codec.ApplicationDataEncoder;
 import com.crscd.cds.ctc.codec.HeaderEncoder;
 import com.crscd.cds.ctc.handler.*;
+import com.crscd.cds.ctc.protocol.ApplicationData;
+import com.crscd.cds.ctc.protocol.NetAddress;
+import com.crscd.cds.ctc.protocol.ProtocolBase;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -21,22 +25,27 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author zhaole
  * @date 2022-03-26
  */
 public class NettyClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NettyClient.class);
     private String host;
     private int port;
     private Channel channel;
     private Bootstrap bootstrap = null;
 
     private static final int MAX_PACKAGE_LENGTH = Integer.MAX_VALUE;
+    private final NetAddress localAddress;
 
-    public NettyClient(String host, int port) {
+    public NettyClient(String host, int port, NetAddress localAddress) {
         this.host = host;
         this.port = port;
+        this.localAddress = localAddress;
         init();
     }
 
@@ -58,6 +67,9 @@ public class NettyClient {
                         pipeline.addLast("decoder", new ApplicationDataDecoder());
                         pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
                         pipeline.addLast("encoder", new HeaderEncoder());
+                        pipeline.addLast("DoubleNetSeq2OutBoundHandler", new DoubleNetSeq2OutBoundHandler());
+                        pipeline.addLast("DoubleNetSeqOutBoundHandler", new DoubleNetSeqOutBoundHandler());
+                        pipeline.addLast("ApplicationDataEncoder", new ApplicationDataEncoder(localAddress));
                     }
                 });
     }
@@ -84,12 +96,60 @@ public class NettyClient {
         });
     }
 
+    public void sendData(ApplicationData data) throws InterruptedException {
+        getChannel().writeAndFlush(data).sync();
+    }
+
+    public void sendData(byte[] data) {
+        if (getChannel().isActive()) {
+            getChannel().writeAndFlush(data);
+        } else {
+            LOGGER.warn("{} is inactive, send failed", getChannel());
+        }
+    }
+
     public Channel getChannel() {
         return channel;
     }
 
     public static void main(String[] args) {
-        NettyClient nettyClient = new NettyClient("10.2.54.251", 8001);
+        NetAddress localAddress = new NetAddress();
+        localAddress.setBureauType((short) 0x01);
+        localAddress.setBureauCode((short) 0x01);
+        localAddress.setSysType((short) 0x01);
+        localAddress.setSysId((short) 0x01);
+        localAddress.setUnitType((short) 0x01);
+        localAddress.setUnitId((short) 0x01);
+        localAddress.setDevType((short) 0x01);
+        localAddress.setDevId((short) 0x01);
+        localAddress.setProcType((short) 0x01);
+        localAddress.setProcId((short) 129);
+        localAddress.setUserType((short) 0x01);
+        localAddress.setUserId(0x01);
+
+        NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress);
         nettyClient.start();
+
+        byte[] bytes = new byte[10];
+        bytes[0] = 0x01;
+        bytes[1] = 0x01;
+        bytes[2] = 0x01;
+        bytes[3] = 0x01;
+        bytes[4] = 0x01;
+        bytes[5] = 0x01;
+        bytes[6] = 0x01;
+        bytes[7] = 0x01;
+        bytes[8] = 0x01;
+        bytes[9] = 0x01;
+        ApplicationData protocolBase = ApplicationData.create((short) 0x01, (short) 0x01, bytes, null);
+
+        while (true) {
+            try {
+                Thread.sleep(10000);
+                nettyClient.sendData(protocolBase);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

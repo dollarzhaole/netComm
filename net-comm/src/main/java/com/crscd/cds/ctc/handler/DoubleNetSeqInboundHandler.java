@@ -16,8 +16,11 @@ public class DoubleNetSeqInboundHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof ByteBuf) {
             ByteBuf byteBuf = (ByteBuf) msg;
-            byteBuf.readUnsignedIntLE();
-            byteBuf.readUnsignedIntLE();
+            
+            if (byteBuf.isReadable()) {
+                byteBuf.readUnsignedIntLE();
+                byteBuf.readUnsignedIntLE();
+            }
         }
 
         super.channelRead(ctx, msg);

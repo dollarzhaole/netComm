@@ -21,4 +21,6 @@ public class DataType {
     public static final short PROP_VALUE_TYPE_VAR_STRING = 0x06;
     public static final short PROP_VALUE_TYPE_TDCS_TIME = 0x07;
     public static final short PROP_VALUE_TYPE_TIME_T = 0x08;
+
+    public static final short PROTOCOL_TYPE_418 = 0x01;
 }
