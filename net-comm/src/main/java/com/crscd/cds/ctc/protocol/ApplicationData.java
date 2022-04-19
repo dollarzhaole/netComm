@@ -1,5 +1,8 @@
 package com.crscd.cds.ctc.protocol;
 
+import com.crscd.cds.ctc.utils.HexUtils;
+
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -37,5 +40,12 @@ public class ApplicationData {
 
     public byte[] getData() {
         return data;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("0x%02X", type) + "-" +
+                String.format("0x%02X", func) + ": " +
+                HexUtils.bytesToHex(data);
     }
 }

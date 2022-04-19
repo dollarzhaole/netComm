@@ -1,10 +1,10 @@
 package com.crscd.cds.ctc.handler;
 
-import com.crscd.cds.ctc.protocol.Message;
-import com.crscd.cds.ctc.protocol.Package;
 import com.crscd.cds.ctc.protocol.PackageType;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -31,21 +31,53 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt)
+    public void userEventTriggered(final ChannelHandlerContext ctx, Object evt)
             throws Exception {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state().equals(IdleState.READER_IDLE)) {
-                LOGGER.debug("read idle from {}", ctx.channel());
+                onReadIdle(ctx);
             } else if (event.state().equals(IdleState.WRITER_IDLE)) {
-                LOGGER.debug("before write heart beat to {}", ctx.channel());
-                ctx.channel().writeAndFlush(HEART_BEAT_BUF.copy()).sync();
-                LOGGER.debug("after write heart beat to {}", ctx.channel());
+                onWriteIdle(ctx);
             } else if (event.state().equals(IdleState.ALL_IDLE)) {
                 LOGGER.debug("all idle on {}", ctx.channel());
             }
         }
 
         super.userEventTriggered(ctx, evt);
+    }
+
+    private void onReadIdle(final ChannelHandlerContext ctx) {
+        LOGGER.debug("read idle from {}", ctx.channel());
+//        try {
+//            ctx.close().addListener(new ChannelFutureListener() {
+//                @Override
+//                public void operationComplete(ChannelFuture channelFuture) throws Exception {
+//                    LOGGER.info("read idle, so channel closed: {}", ctx);
+//                }
+//            });
+//        } catch (Exception e) {
+//            LOGGER.error("HeartBeatHandler.onReadIdle exception", e);
+//        }
+    }
+
+    private void onWriteIdle(final ChannelHandlerContext ctx) throws InterruptedException {
+        if (ctx.channel().isActive()) {
+            LOGGER.debug("before write heart beat to {}", ctx.channel());
+            ctx.channel().writeAndFlush(HEART_BEAT_BUF.copy()).sync();
+            LOGGER.debug("after write heart beat to {}", ctx.channel());
+        } else {
+//            try {
+//                LOGGER.info("ctx is inactive, so about to close {}", ctx);
+//                ctx.close().addListener(new ChannelFutureListener() {
+//                    @Override
+//                    public void operationComplete(ChannelFuture channelFuture) throws Exception {
+//                        LOGGER.info("ctx is inactive, so close {} finished", ctx);
+//                    }
+//                });
+//            } catch (Exception e) {
+//                LOGGER.error("close exception:", e);
+//            }
+        }
     }
 }

@@ -2,15 +2,19 @@ package com.crscd.cds.ctc.client;
 
 
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import com.crscd.cds.ctc.codec.ApplicationDataDecoder;
 import com.crscd.cds.ctc.codec.ApplicationDataEncoder;
 import com.crscd.cds.ctc.codec.HeaderEncoder;
+import com.crscd.cds.ctc.codec.RegisterMessageEncoder;
+import com.crscd.cds.ctc.filter.FilterRegister;
 import com.crscd.cds.ctc.handler.*;
 import com.crscd.cds.ctc.protocol.ApplicationData;
 import com.crscd.cds.ctc.protocol.NetAddress;
 import com.crscd.cds.ctc.protocol.ProtocolBase;
+import com.crscd.cds.ctc.protocol.RegisterMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -58,7 +62,7 @@ public class NettyClient {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast("idleState", new IdleStateHandler(2, 2, 2));
+                        pipeline.addLast("idleState", new IdleStateHandler(7, 2, 2));
                         pipeline.addLast("hb", new HeartBeatHandler());
                         pipeline.addLast("LengthFieldBasedFrameDecoder", new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, MAX_PACKAGE_LENGTH, 4, 4, 5, 0, true));
                         pipeline.addLast("PackageChannelInboundHandler", new PackageChannelInboundHandler());
@@ -70,6 +74,8 @@ public class NettyClient {
                         pipeline.addLast("DoubleNetSeq2OutBoundHandler", new DoubleNetSeq2OutBoundHandler());
                         pipeline.addLast("DoubleNetSeqOutBoundHandler", new DoubleNetSeqOutBoundHandler());
                         pipeline.addLast("ApplicationDataEncoder", new ApplicationDataEncoder(localAddress));
+                        pipeline.addLast("RegisterMessageEncoder", new RegisterMessageEncoder());
+                        pipeline.addLast("ExceptionHandler", new ExceptionHandler());
                     }
                 });
     }
@@ -97,7 +103,18 @@ public class NettyClient {
     }
 
     public void sendData(ApplicationData data) throws InterruptedException {
+        if (getChannel() == null) {
+            LOGGER.debug("not connected, send fail {}", channel);
+            return;
+        }
+
+        if (!getChannel().isActive()) {
+            LOGGER.debug("channel {} is inactive, send fail", channel);
+            return;
+        }
+
         getChannel().writeAndFlush(data).sync();
+        LOGGER.debug("channel {} send data {} successfully", channel, data.toString());
     }
 
     public void sendData(byte[] data) {
@@ -112,7 +129,7 @@ public class NettyClient {
         return channel;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         NetAddress localAddress = new NetAddress();
         localAddress.setBureauType((short) 0x01);
         localAddress.setBureauCode((short) 0x01);
@@ -130,6 +147,14 @@ public class NettyClient {
         NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress);
         nettyClient.start();
 
+        Thread.sleep(1000);
+        ArrayList<FilterRegister.TypeFunc> funcs = new ArrayList<FilterRegister.TypeFunc>();
+        funcs.add(FilterRegister.TypeFunc.create((short) 0xFF, (short) 0xFF));
+        RegisterMessage msg = RegisterMessage.create(FilterRegister.create(funcs));
+//        LOGGER.debug("before write register message");
+//        nettyClient.getChannel().writeAndFlush(msg).sync();
+//        LOGGER.debug("after write register message");
+
         byte[] bytes = new byte[10];
         bytes[0] = 0x01;
         bytes[1] = 0x01;
@@ -146,7 +171,7 @@ public class NettyClient {
         while (true) {
             try {
                 Thread.sleep(10000);
-                nettyClient.sendData(protocolBase);
+//                nettyClient.sendData(protocolBase);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

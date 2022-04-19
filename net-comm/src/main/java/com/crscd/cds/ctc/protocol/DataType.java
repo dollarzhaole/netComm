@@ -23,4 +23,11 @@ public class DataType {
     public static final short PROP_VALUE_TYPE_TIME_T = 0x08;
 
     public static final short PROTOCOL_TYPE_418 = 0x01;
+
+    public static final short REGISTER_OPERATION_CODE_REGISTER = 0x01;
+    public static final short REGISTER_OPERATION_CODE_CLEAR = 0x02;
+    public static final short REGISTER_OPERATION_CODE_REGISTER_RETURN = 0x03;
+
+    public static final short REGISTER_OPERATION_RESULT_FAIL = 0x00;
+    public static final short REGISTER_OPERATION_RESULT_SUCCESS = 0x01;
 }

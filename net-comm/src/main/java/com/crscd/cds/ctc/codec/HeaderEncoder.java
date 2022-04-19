@@ -1,6 +1,6 @@
 package com.crscd.cds.ctc.codec;
 
-import com.crscd.cds.ctc.protocol.Message;
+import com.crscd.cds.ctc.protocol.MessageHead;
 import com.crscd.cds.ctc.protocol.PackageHeader;
 import com.crscd.cds.ctc.protocol.Package;
 import com.crscd.cds.ctc.utils.ReflectionUtils;
@@ -18,14 +18,14 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author zhaole
  * @date 2022-04-02
  */
-public class HeaderEncoder extends MessageToByteEncoder<Package<Message>> {
+public class HeaderEncoder extends MessageToByteEncoder<Package<MessageHead>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HeaderEncoder.class);
     public static final int VERSION = 0x01;
     private static final int OFFSET_LENGTH = 4;
     private final AtomicLong packageSeq = new AtomicLong(0);
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, Package<Message> msg, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext channelHandlerContext, Package<MessageHead> msg, ByteBuf out) throws Exception {
         LOGGER.debug("PackageEncoder, msg={}", msg);
 
         PackageHeader header = msg.getHeader();

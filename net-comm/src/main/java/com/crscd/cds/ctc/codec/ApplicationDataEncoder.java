@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.codec;
 
 import com.crscd.cds.ctc.protocol.*;
+import com.crscd.cds.ctc.utils.HexUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -83,6 +84,10 @@ public class ApplicationDataEncoder extends MessageToByteEncoder<ApplicationData
 
         // 设置包长
         out.setIntLE(out.readerIndex() + OFFSET_LENGTH, out.readableBytes() - PackageHeader.HEADER_LENGTH);
+
+        byte[] bytes = new byte[out.readableBytes()];
+        out.getBytes(out.readerIndex(), bytes);
+        LOGGER.debug("send bytes: {}", HexUtils.bytesToHex(bytes));
     }
 
     private static int encodeAddress(NetAddress address, ByteBuf byteBuf) {

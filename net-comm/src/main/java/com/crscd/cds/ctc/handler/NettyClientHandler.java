@@ -34,7 +34,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<PackageHeade
 
     @Override
     public void channelActive(ChannelHandlerContext channelHandlerContext) throws Exception {
-        System.out.println("connected: " + channelHandlerContext.channel().toString());
+        LOGGER.debug(">>>>>>>>> connected: {}", channelHandlerContext.channel());
 
         Package<NegotiationRequestMessage> pkt = new Package<NegotiationRequestMessage>();
         PackageHeader header = new PackageHeader();
@@ -57,7 +57,8 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<PackageHeade
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("offline");
+        LOGGER.info(">>>>>>>>> offline: {}", ctx.channel());
+
         //使用过程中断线重连
         final EventLoop eventLoop = ctx.channel().eventLoop();
         if (attempts < 12) {

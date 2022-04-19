@@ -8,48 +8,13 @@ import java.util.List;
  * @author zhaole
  * @date 2022-04-14
  */
-public class DataMessage extends DoubleNetMessage{
-    private short dataType;
-    private short protocolType;
-    private int forwardLength;
+public class ForwardMessage extends MessageHead {
     private short forwardType;
     private short type;
     private short func;
     private NetAddress src;
     private List<NetAddress> dest;
     private List<ConditionalProperty> properties;
-
-    public short getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(short dataType) {
-        this.dataType = dataType;
-    }
-
-    public short getProtocolType() {
-        return protocolType;
-    }
-
-    public void setProtocolType(short protocolType) {
-        this.protocolType = protocolType;
-    }
-
-    public int getForwardLength() {
-        return forwardLength;
-    }
-
-    public void setForwardLength(int forwardLength) {
-        this.forwardLength = forwardLength;
-    }
-
-    public short getForwardType() {
-        return forwardType;
-    }
-
-    public void setForwardType(short forwardType) {
-        this.forwardType = forwardType;
-    }
 
     public short getType() {
         return type;
@@ -91,7 +56,9 @@ public class DataMessage extends DoubleNetMessage{
         this.properties = properties;
     }
 
-    void encode(ByteBuf byteBuf) {
-        
+    @Override
+    ByteBuf encode() {
+        ByteBuf buf = super.encode();
+        return buf;
     }
 }
