@@ -69,11 +69,11 @@ public class NettyClient {
                         pipeline.addLast("DoubleNetSeqInboundHandler", new DoubleNetSeqInboundHandler());
                         pipeline.addLast("ForwardInboundHandler", new ForwardInboundHandler());
                         pipeline.addLast("decoder", new ApplicationDataDecoder());
-                        pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
                         pipeline.addLast("encoder", new HeaderEncoder());
+                        pipeline.addLast("handler", new NettyClientHandler(NettyClient.this));
+                        pipeline.addLast("ApplicationDataEncoder", new ApplicationDataEncoder(localAddress));
                         pipeline.addLast("DoubleNetSeq2OutBoundHandler", new DoubleNetSeq2OutBoundHandler());
                         pipeline.addLast("DoubleNetSeqOutBoundHandler", new DoubleNetSeqOutBoundHandler());
-                        pipeline.addLast("ApplicationDataEncoder", new ApplicationDataEncoder(localAddress));
                         pipeline.addLast("RegisterMessageEncoder", new RegisterMessageEncoder());
                         pipeline.addLast("ExceptionHandler", new ExceptionHandler());
                     }

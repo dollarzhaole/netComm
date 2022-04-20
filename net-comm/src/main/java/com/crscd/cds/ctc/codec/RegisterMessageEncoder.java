@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.codec;
 
 import com.crscd.cds.ctc.protocol.RegisterMessage;
+import com.crscd.cds.ctc.utils.HexUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -19,6 +20,10 @@ public class RegisterMessageEncoder extends MessageToByteEncoder<RegisterMessage
 
         ByteBuf buf = msg.encode();
         out.writeBytes(buf.copy());
-        buf.release();
+//        buf.release();
+
+        byte[] bytes = new byte[buf.readableBytes()];
+        buf.getBytes(0, bytes);
+        LOGGER.debug("reg: {}", HexUtils.bytesToHex(bytes, 20));
     }
 }

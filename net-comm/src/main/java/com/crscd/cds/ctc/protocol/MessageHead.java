@@ -8,7 +8,6 @@ import io.netty.buffer.PooledByteBufAllocator;
  * @date 2022-04-08
  */
 public class MessageHead {
-    protected final int FORWARD_LENGTH_OFFSET = 2;
     private short dataType;
     private short protocolType;
 

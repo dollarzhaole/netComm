@@ -68,13 +68,14 @@ public class RegisterMessage extends MessageHead {
 
     public ByteBuf encode() {
         ByteBuf buffer = super.encode();
+        buffer.writeIntLE(0);
         buffer.writeByte(operationCode);
         buffer.writeIntLE((int) requestCode);
         buffer.writeByte(DataType.REGISTER_OPERATION_RESULT_FAIL);
         buffer.writeShortLE(registerString.length());
         buffer.writeCharSequence(registerString, Charset.forName("UTF-8"));
 
-        buffer.setShortLE(buffer.readerIndex() + FORWARD_LENGTH_OFFSET, buffer.readableBytes() - 4);
+        buffer.setIntLE(4, buffer.readableBytes() - 8);
 
         return buffer;
     }

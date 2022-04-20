@@ -36,21 +36,13 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<PackageHeade
     public void channelActive(ChannelHandlerContext channelHandlerContext) throws Exception {
         LOGGER.debug(">>>>>>>>> connected: {}", channelHandlerContext.channel());
 
-        Package<NegotiationRequestMessage> pkt = new Package<NegotiationRequestMessage>();
-        PackageHeader header = new PackageHeader();
         NegotiationRequestMessage negotiationRequestPackage = new NegotiationRequestMessage();
 
         // client id of tdci should be 129 ~ 159
         negotiationRequestPackage.setClientId(129);
-        header.setLength(2L);
-        header.setVersion(1L);
-        header.setSeq(0L);
-        header.setType(PackageType.NEGOTIATION_REQUEST);
-        pkt.setHeader(header);
-        pkt.setData(negotiationRequestPackage);
 
-        channelHandlerContext.channel().writeAndFlush(pkt).sync();
-        LOGGER.debug("send negotiation package, pkt={}", pkt);
+        channelHandlerContext.writeAndFlush(negotiationRequestPackage).sync();
+        LOGGER.debug("send negotiation package, pkt={}", negotiationRequestPackage);
 
         attempts = 0;
     }

@@ -64,7 +64,8 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
     private void onWriteIdle(final ChannelHandlerContext ctx) throws InterruptedException {
         if (ctx.channel().isActive()) {
             LOGGER.debug("before write heart beat to {}", ctx.channel());
-            ctx.channel().writeAndFlush(HEART_BEAT_BUF.copy()).sync();
+            // 此处要context发送数据，是因为避免从pipline的tail发送
+            ctx.writeAndFlush(HEART_BEAT_BUF.copy()).sync();
             LOGGER.debug("after write heart beat to {}", ctx.channel());
         } else {
 //            try {

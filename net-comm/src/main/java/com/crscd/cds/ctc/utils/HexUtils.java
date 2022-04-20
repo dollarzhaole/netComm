@@ -20,4 +20,17 @@ public class HexUtils {
         }
         return new String(hexChars);
     }
+
+    public static String bytesToHex(byte[] bytes, int column) {
+        String str = bytesToHex(bytes);
+
+        char[] chars = str.toCharArray();
+        int row = 1;
+        while (row * column * 3 - 1 < str.length()) {
+            chars[row * column * 3 - 1] = '\n';
+            row += 1;
+        }
+
+        return "\n" + new String(chars);
+    }
 }
