@@ -17,12 +17,18 @@ import java.util.Collection;
 public class FilterRegister {
     @XmlElement(name = "rec")
     private ReceiveCondition receiveCondition;
+    @XmlElement(name = "clt_addr")
+    private ClientAddress clientAddress;
+
+    public void setClientAddress(ClientAddress clientAddress) {
+        this.clientAddress = clientAddress;
+    }
 
     public void setReceiveCondition(ReceiveCondition receiveCondition) {
         this.receiveCondition = receiveCondition;
     }
 
-    public static FilterRegister create(Collection<TypeFunc> typeFunc) {
+    public static FilterRegister create(Collection<TypeFunc> typeFunc, ClientAddress clientAddress) {
         FilterRegister filterRegister = new FilterRegister();
 
         ReceiveCondition receiveCondition = new ReceiveCondition();
@@ -33,6 +39,7 @@ public class FilterRegister {
         }
         receiveCondition.setConditions(conditions);
         filterRegister.setReceiveCondition(receiveCondition);
+        filterRegister.setClientAddress(clientAddress);
 
         return filterRegister;
     }
@@ -64,6 +71,36 @@ public class FilterRegister {
             tf.type = type;
             tf.func = func;
             return tf;
+        }
+    }
+
+    public static class ClientAddress {
+        @XmlElement(name = "bureau_code")
+        private int bureauCode;
+        @XmlElement(name = "unit_type")
+        private int unitType;
+        @XmlElement(name = "unit_id")
+        private int unitId;
+
+        public static ClientAddress create(int bureauCode, int unitType, int unitId) {
+            ClientAddress clientAddress = new ClientAddress();
+            clientAddress.setBureauCode(bureauCode);
+            clientAddress.setUnitType(unitType);
+            clientAddress.setUnitId(unitId);
+
+            return clientAddress;
+        }
+
+        public void setBureauCode(int bureauCode) {
+            this.bureauCode = bureauCode;
+        }
+
+        public void setUnitType(int unitType) {
+            this.unitType = unitType;
+        }
+
+        public void setUnitId(int unitId) {
+            this.unitId = unitId;
         }
     }
 

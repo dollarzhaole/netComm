@@ -58,7 +58,9 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         ArrayList<FilterRegister.TypeFunc> funcs = new ArrayList<FilterRegister.TypeFunc>();
         funcs.add(FilterRegister.TypeFunc.create((short) 0xFF, (short) 0xFF));
 
-        RegisterMessage msg = RegisterMessage.create(FilterRegister.create(funcs));
+        FilterRegister.ClientAddress address = FilterRegister.ClientAddress.create(0x01, 0x02, 0x01);
+
+        RegisterMessage msg = RegisterMessage.create(FilterRegister.create(funcs, address));
 
         channelHandlerContext.channel().writeAndFlush(msg).sync();
         LOGGER.info("send register xml to {} successfully", channelHandlerContext);

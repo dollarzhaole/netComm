@@ -1,5 +1,7 @@
 package com.crscd.cds.ctc.protocol;
 
+import io.netty.buffer.ByteBuf;
+
 /**
  * @author zhaole
  * @date 2022-04-14
@@ -112,5 +114,24 @@ public class NetAddress {
 
     public void setUserId(long userId) {
         this.userId = userId;
+    }
+
+    public void encode(ByteBuf byteBuf) {
+        byteBuf.writeByte(getBureauType());
+        byteBuf.writeByte(getBureauCode());
+        byteBuf.writeByte(getSysType());
+        byteBuf.writeByte(getSysId());
+
+        byteBuf.writeByte(getUnitType());
+        byteBuf.writeShortLE(getUnitId());
+
+        byteBuf.writeByte(getDevType());
+        byteBuf.writeShortLE(getDevId());
+
+        byteBuf.writeByte(getProcType());
+        byteBuf.writeShortLE(getProcId());
+
+        byteBuf.writeByte(getUserType());
+        byteBuf.writeIntLE((int) getUserId());
     }
 }

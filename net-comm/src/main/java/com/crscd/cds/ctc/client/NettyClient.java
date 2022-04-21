@@ -8,13 +8,11 @@ import java.util.concurrent.TimeUnit;
 import com.crscd.cds.ctc.codec.ApplicationDataDecoder;
 import com.crscd.cds.ctc.codec.ApplicationDataEncoder;
 import com.crscd.cds.ctc.codec.HeaderEncoder;
-import com.crscd.cds.ctc.codec.RegisterMessageEncoder;
+import com.crscd.cds.ctc.codec.MessageEncoder;
 import com.crscd.cds.ctc.filter.FilterRegister;
 import com.crscd.cds.ctc.handler.*;
 import com.crscd.cds.ctc.protocol.ApplicationData;
 import com.crscd.cds.ctc.protocol.NetAddress;
-import com.crscd.cds.ctc.protocol.ProtocolBase;
-import com.crscd.cds.ctc.protocol.RegisterMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -74,7 +72,7 @@ public class NettyClient {
                         pipeline.addLast("ApplicationDataEncoder", new ApplicationDataEncoder(localAddress));
                         pipeline.addLast("DoubleNetSeq2OutBoundHandler", new DoubleNetSeq2OutBoundHandler());
                         pipeline.addLast("DoubleNetSeqOutBoundHandler", new DoubleNetSeqOutBoundHandler());
-                        pipeline.addLast("RegisterMessageEncoder", new RegisterMessageEncoder());
+                        pipeline.addLast("RegisterMessageEncoder", new MessageEncoder());
                         pipeline.addLast("ExceptionHandler", new ExceptionHandler());
                     }
                 });
@@ -150,7 +148,7 @@ public class NettyClient {
         Thread.sleep(1000);
         ArrayList<FilterRegister.TypeFunc> funcs = new ArrayList<FilterRegister.TypeFunc>();
         funcs.add(FilterRegister.TypeFunc.create((short) 0xFF, (short) 0xFF));
-        RegisterMessage msg = RegisterMessage.create(FilterRegister.create(funcs));
+//        RegisterMessage msg = RegisterMessage.create(FilterRegister.create(funcs));
 //        LOGGER.debug("before write register message");
 //        nettyClient.getChannel().writeAndFlush(msg).sync();
 //        LOGGER.debug("after write register message");

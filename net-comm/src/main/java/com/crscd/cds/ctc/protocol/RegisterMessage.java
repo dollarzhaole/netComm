@@ -66,8 +66,10 @@ public class RegisterMessage extends MessageHead {
         this.registerString = registerString;
     }
 
-    public ByteBuf encode() {
-        ByteBuf buffer = super.encode();
+    @Override
+    public void encode(ByteBuf buffer) {
+        int offset = buffer.readableBytes();
+
         buffer.writeIntLE(0);
         buffer.writeByte(operationCode);
         buffer.writeIntLE((int) requestCode);
@@ -75,8 +77,6 @@ public class RegisterMessage extends MessageHead {
         buffer.writeShortLE(registerString.length());
         buffer.writeCharSequence(registerString, Charset.forName("UTF-8"));
 
-        buffer.setIntLE(4, buffer.readableBytes() - 8);
-
-        return buffer;
+        buffer.setIntLE(offset, buffer.readableBytes() - (1 + 4 + 1 + 2 + registerString.length()));
     }
 }

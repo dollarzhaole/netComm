@@ -27,12 +27,20 @@ public class MessageHead {
         this.protocolType = protocolType;
     }
 
-    ByteBuf encode() {
+    public final ByteBuf encode() {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer();
         buffer.writeByte(dataType);
         buffer.writeByte(protocolType);
         buffer.writeShortLE(0);
 
+        encode(buffer);
+
+        buffer.setShortLE(2, buffer.readableBytes() - 4);
+
         return buffer;
+    }
+
+    public void encode(ByteBuf buffer) {
+
     }
 }
