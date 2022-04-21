@@ -57,8 +57,5 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
         byte[] bytes = new byte[out.readableBytes()];
         out.getBytes(0, bytes);
         LOGGER.debug("send data: {}", HexUtils.bytesToHex(bytes, 20));
-
-
-//        data.release();
     }
 }

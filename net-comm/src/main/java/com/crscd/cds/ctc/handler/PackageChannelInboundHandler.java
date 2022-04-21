@@ -1,6 +1,8 @@
 package com.crscd.cds.ctc.handler;
 
 import com.crscd.cds.ctc.filter.FilterRegister;
+import com.crscd.cds.ctc.protocol.MessageHead;
+import com.crscd.cds.ctc.protocol.NegotiationResponseMessage;
 import com.crscd.cds.ctc.protocol.PackageType;
 import com.crscd.cds.ctc.protocol.RegisterMessage;
 import io.netty.buffer.ByteBuf;
@@ -60,21 +62,16 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
 
         FilterRegister.ClientAddress address = FilterRegister.ClientAddress.create(0x01, 0x02, 0x01);
 
-        RegisterMessage msg = RegisterMessage.create(FilterRegister.create(funcs, address));
+        MessageHead msg = MessageHead.createRegisterMessage(FilterRegister.create(funcs, address));
 
         channelHandlerContext.channel().writeAndFlush(msg).sync();
         LOGGER.info("send register xml to {} successfully", channelHandlerContext);
     }
 
     private void doNegotiationResponse(ChannelHandlerContext context, ByteBuf byteBuf) {
-        short window = byteBuf.readUnsignedByte();
-        short ack = byteBuf.readUnsignedByte();
-        short ackOvertime = byteBuf.readUnsignedByte();
-        short heartBeat = byteBuf.readUnsignedByte();
-        short heartBeatOvertime = byteBuf.readUnsignedByte();
+        NegotiationResponseMessage message = NegotiationResponseMessage.decode(byteBuf);
 
-        LOGGER.info("receive negotiation response from {}: window={}, ack={}, ack_overtime={}, heartBeat={}, heart_beat_ot={}",
-                context.channel(), window, ack, ackOvertime, heartBeat, heartBeatOvertime);
+        LOGGER.info("receive negotiation response from {}: {}", context.channel(), message);
 
         // todo 增加动态添加Handler到NettyClient
     }

@@ -1,5 +1,7 @@
 package com.crscd.cds.ctc.protocol;
 
+import io.netty.buffer.ByteBuf;
+
 /**
  * @author zhaole
  * @date 2022-04-02
@@ -49,5 +51,27 @@ public class NegotiationResponseMessage {
 
     public void setHeartBeatOverTime(Short heartBeatOverTime) {
         this.heartBeatOverTime = heartBeatOverTime;
+    }
+
+    public static NegotiationResponseMessage decode(ByteBuf buffer) {
+        NegotiationResponseMessage message = new NegotiationResponseMessage();
+        message.window = buffer.readUnsignedByte();
+        message.confirm = buffer.readUnsignedByte();
+        message.overTime = buffer.readUnsignedByte();
+        message.heartBeatInterval = buffer.readUnsignedByte();
+        message.heartBeatOverTime = buffer.readUnsignedByte();
+
+        return message;
+    }
+
+    @Override
+    public String toString() {
+        return "NegotiationResponseMessage{" +
+                "window=" + window +
+                ", confirm=" + confirm +
+                ", overTime=" + overTime +
+                ", heartBeatInterval=" + heartBeatInterval +
+                ", heartBeatOverTime=" + heartBeatOverTime +
+                '}';
     }
 }

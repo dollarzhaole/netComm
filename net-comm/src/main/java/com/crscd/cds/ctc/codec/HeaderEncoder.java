@@ -1,16 +1,12 @@
 package com.crscd.cds.ctc.codec;
 
 import com.crscd.cds.ctc.protocol.*;
-import com.crscd.cds.ctc.protocol.Package;
-import com.crscd.cds.ctc.utils.ReflectionUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Field;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -21,6 +17,7 @@ public class HeaderEncoder extends MessageToByteEncoder<NegotiationRequestMessag
     private static final Logger LOGGER = LoggerFactory.getLogger(HeaderEncoder.class);
     public static final int VERSION = 0x01;
     private static final int OFFSET_LENGTH = 4;
+    public static int HEADER_LENGTH = 13;
     private final AtomicLong packageSeq = new AtomicLong(0);
 
     @Override
@@ -38,6 +35,6 @@ public class HeaderEncoder extends MessageToByteEncoder<NegotiationRequestMessag
 
         out.writeShortLE(msg.getClientId());
 
-        out.setIntLE(out.readerIndex() + OFFSET_LENGTH, out.readableBytes() - PackageHeader.HEADER_LENGTH);
+        out.setIntLE(out.readerIndex() + OFFSET_LENGTH, out.readableBytes() - HEADER_LENGTH);
     }
 }
