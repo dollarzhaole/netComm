@@ -1,5 +1,6 @@
 package com.crscd.cds.ctc.handler;
 
+import com.crscd.cds.ctc.filter.DoubleNetSequence;
 import com.crscd.cds.ctc.protocol.PackageType;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -12,17 +13,30 @@ import org.slf4j.LoggerFactory;
  * @date 2022-04-12
  */
 public class DoubleNetSeqInboundHandler extends ChannelInboundHandlerAdapter {
+    private DoubleNetSequence recSequence;
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof ByteBuf) {
-            ByteBuf byteBuf = (ByteBuf) msg;
-            
-            if (byteBuf.isReadable()) {
-                byteBuf.readUnsignedIntLE();
-                byteBuf.readUnsignedIntLE();
-            }
+            handleDoubleNetSequence((ByteBuf) msg);
         }
 
         super.channelRead(ctx, msg);
+    }
+
+    private void handleDoubleNetSequence(ByteBuf msg) {
+        if (recSequence == null) {
+            recSequence = new DoubleNetSequence(0, 0);
+        }
+
+        if (!msg.isReadable()) {
+            return;
+        }
+
+        long low = msg.readUnsignedIntLE();
+        long high = msg.readUnsignedIntLE();
+
+        if (recSequence.isContinuous(low, high)) {
+            recSequence.set(low, high);
+        }
     }
 }

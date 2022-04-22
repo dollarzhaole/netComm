@@ -1,7 +1,7 @@
 package com.crscd.cds.ctc.handler;
 
 import com.crscd.cds.ctc.client.NettyClient;
-import com.crscd.cds.ctc.codec.ApplicationDataDecoder;
+import com.crscd.cds.ctc.codec.MessageDecoder;
 import com.crscd.cds.ctc.codec.HeaderEncoder;
 import com.crscd.cds.ctc.codec.MessageEncoder;
 import io.netty.channel.ChannelInitializer;
@@ -37,7 +37,7 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast("PackageChannelInboundHandler", new PackageChannelInboundHandler());
         pipeline.addLast("DoubleNetSeqInboundHandler", new DoubleNetSeqInboundHandler());
         pipeline.addLast("ForwardInboundHandler", new ForwardInboundHandler());
-        pipeline.addLast("decoder", new ApplicationDataDecoder());
+        pipeline.addLast("decoder", new MessageDecoder());
         pipeline.addLast("encoder", new HeaderEncoder());
         pipeline.addLast("handler", new NettyClientHandler(client));
         pipeline.addLast("DoubleNetSeqOutBoundHandler", new DoubleNetSeqOutBoundHandler());

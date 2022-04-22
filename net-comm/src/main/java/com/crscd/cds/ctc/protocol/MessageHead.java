@@ -177,4 +177,29 @@ public class MessageHead {
 
         return buffer;
     }
+
+    public final void decode(ByteBuf buffer) {
+        dataType = buffer.readUnsignedByte();
+        protocolType = buffer.readUnsignedByte();
+        int forwardLen = buffer.readUnsignedShortLE();
+
+        forwardType = buffer.readByte();
+        type = buffer.readByte();
+        func = buffer.readByte();
+
+        src = new NetAddress();
+        src.decode(buffer);
+
+        int destLen = buffer.readUnsignedShortLE();
+        for (int i = 0; i < destLen; i++) {
+            NetAddress address = new NetAddress();
+            address.decode(buffer);
+        }
+
+        short propertiesLen = buffer.readUnsignedByte();
+        for (int i = 0; i < propertiesLen; i++) {
+            ConditionalProperty property = new ConditionalProperty();
+            property.decode(buffer);
+        }
+    }
 }

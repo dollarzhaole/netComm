@@ -85,16 +85,24 @@ public class NettyClient {
             return;
         }
 
-        getChannel().writeAndFlush(data).sync();
-        LOGGER.debug("channel {} send data {} successfully", channel, data.toString());
+        MessageHead msg = MessageHead.createApplicationData(data.getType(), data.getFunc(), data.getData());
+        getChannel().writeAndFlush(msg).sync();
+        LOGGER.debug("channel {} send data {} successfully", channel, data);
     }
 
     public void sendData(byte[] data) {
-        if (getChannel().isActive()) {
-            getChannel().writeAndFlush(data);
-        } else {
-            LOGGER.warn("{} is inactive, send failed", getChannel());
+        if (getChannel() == null) {
+            LOGGER.debug("not connected, send failed {}", channel);
+            return;
         }
+
+        if (!getChannel().isActive()) {
+            LOGGER.warn("{} is inactive, send failed", getChannel());
+            return;
+        }
+
+        MessageHead msg = MessageHead.createApplicationData(data);
+        getChannel().writeAndFlush(msg);
     }
 
     public Channel getChannel() {
@@ -118,14 +126,6 @@ public class NettyClient {
 
         NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress);
         nettyClient.start();
-
-        Thread.sleep(1000);
-        ArrayList<FilterRegister.TypeFunc> funcs = new ArrayList<FilterRegister.TypeFunc>();
-        funcs.add(FilterRegister.TypeFunc.create((short) 0xFF, (short) 0xFF));
-//        RegisterMessage msg = RegisterMessage.create(FilterRegister.create(funcs));
-//        LOGGER.debug("before write register message");
-//        nettyClient.getChannel().writeAndFlush(msg).sync();
-//        LOGGER.debug("after write register message");
 
         byte[] bytes = new byte[10];
         bytes[0] = 0x01;

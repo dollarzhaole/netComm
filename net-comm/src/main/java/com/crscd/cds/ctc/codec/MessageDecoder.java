@@ -12,10 +12,18 @@ import java.util.List;
  * @author zhaole
  * @date 2022-04-03
  */
-public class ApplicationDataDecoder extends ByteToMessageDecoder {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationDataDecoder.class);
+public class MessageDecoder extends ByteToMessageDecoder {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageDecoder.class);
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
         LOGGER.debug("ApplicationDataDecoder decode, byteBuf={}", byteBuf);
+
+        long bodyLen = byteBuf.readUnsignedIntLE();
+        ByteBuf bodyBuf = byteBuf.readBytes((int) bodyLen);
+
+        byte[] data = new byte[bodyBuf.readableBytes()];
+        bodyBuf.getBytes(0, data);
+
+        list.add(data);
     }
 }

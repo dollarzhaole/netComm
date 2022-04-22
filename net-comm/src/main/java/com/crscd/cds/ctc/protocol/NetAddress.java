@@ -134,4 +134,23 @@ public class NetAddress {
         byteBuf.writeByte(getUserType());
         byteBuf.writeIntLE((int) getUserId());
     }
+
+    public void decode(ByteBuf buffer) {
+        bureauType = buffer.readUnsignedByte();
+        bureauCode = buffer.readUnsignedByte();
+        sysType = buffer.readUnsignedByte();
+        sysId = buffer.readUnsignedByte();
+
+        unitType = buffer.readUnsignedByte();
+        unitId = buffer.readUnsignedShortLE();
+
+        devType = buffer.readUnsignedByte();
+        devId = buffer.readUnsignedShortLE();
+
+        procType = buffer.readUnsignedByte();
+        procId = buffer.readUnsignedShortLE();
+
+        userType = buffer.readUnsignedByte();
+        userId = buffer.readUnsignedIntLE();
+    }
 }

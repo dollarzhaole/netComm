@@ -22,10 +22,11 @@ import org.slf4j.LoggerFactory;
 public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HeartBeatHandler.class);
     private static final ByteBuf HEART_BEAT_BUF = Unpooled.buffer(13);
+    private int index = 0;
 
     static {
         HEART_BEAT_BUF.writeIntLE(0x01);
-        HEART_BEAT_BUF.writeIntLE(13);
+        HEART_BEAT_BUF.writeIntLE(0);
         HEART_BEAT_BUF.writeByte(PackageType.HEART_BEAT);
         HEART_BEAT_BUF.writeIntLE(0);
     }
@@ -63,10 +64,13 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
 
     private void onWriteIdle(final ChannelHandlerContext ctx) throws InterruptedException {
         if (ctx.channel().isActive()) {
-            LOGGER.debug("before write heart beat to {}", ctx.channel());
+            index += 1;
+            LOGGER.debug("before write heart {} beat to {}", index, ctx.channel());
             // 此处要context发送数据，是因为避免从pipline的tail发送
-            ctx.writeAndFlush(HEART_BEAT_BUF.copy()).sync();
-            LOGGER.debug("after write heart beat to {}", ctx.channel());
+            ByteBuf buf = HEART_BEAT_BUF.copy();
+            buf.setShortLE(9, index);
+            ctx.writeAndFlush(buf).sync();
+            LOGGER.debug("after write heart {} beat to {}", index, ctx.channel());
         } else {
 //            try {
 //                LOGGER.info("ctx is inactive, so about to close {}", ctx);

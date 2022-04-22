@@ -9,4 +9,7 @@ import io.netty.buffer.ByteBuf;
 public class ConditionalProperty {
     public void encode(ByteBuf buffer) {
     }
+
+    public void decode(ByteBuf buffer) {
+    }
 }

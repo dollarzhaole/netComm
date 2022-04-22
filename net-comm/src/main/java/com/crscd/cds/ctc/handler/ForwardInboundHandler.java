@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.handler;
 
 import com.crscd.cds.ctc.protocol.DataType;
+import com.crscd.cds.ctc.protocol.MessageHead;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -20,32 +21,8 @@ public class ForwardInboundHandler extends ChannelInboundHandlerAdapter {
         if (msg instanceof ByteBuf) {
             ByteBuf byteBuf = (ByteBuf) msg;
 
-            short protocolType = byteBuf.readUnsignedByte();
-            if (protocolType != DataType.FORWARD) {
-                int forwardInfoLen = byteBuf.readUnsignedShortLE();
-                return;
-            }
-
-            int forwardInfoLen = byteBuf.readUnsignedShortLE();
-
-            short forwardType = byteBuf.readUnsignedByte();
-            short dataType = byteBuf.readUnsignedByte();
-            short dateFunc = byteBuf.readUnsignedByte();
-
-            // 源地址
-            decodeAddress(byteBuf);
-
-            // 解析目的地址
-            int destAddressCount = byteBuf.readUnsignedShortLE();
-            for (int i = 0; i < destAddressCount; i++) {
-                decodeAddress(byteBuf);
-            }
-
-            // 解析额外属性
-            short propCount = byteBuf.readUnsignedByte();
-            for (int i = 0; i < propCount; i++) {
-                decodeProp(byteBuf);
-            }
+            MessageHead message = new MessageHead();
+            message.decode(byteBuf);
         }
 
         super.channelRead(ctx, msg);

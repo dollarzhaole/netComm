@@ -24,6 +24,8 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        LOGGER.debug("rec msg: {}", msg);
+
         ByteBuf byteBuf = (ByteBuf) msg;
         if (channelRead0(ctx, byteBuf) && byteBuf.isReadable()) {
             super.channelRead(ctx, msg);
