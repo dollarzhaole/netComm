@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 /**
  * HeartbeatServer Handler.
  *
- * @author <a href="https://waylau.com">Way Lau</a>
- * @since 1.0.0 2019年12月19日
+ * @author zhaole
+ * @date 2022-03-2
  */
 public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HeartBeatHandler.class);
@@ -50,16 +50,16 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
 
     private void onReadIdle(final ChannelHandlerContext ctx) {
         LOGGER.debug("read idle from {}", ctx.channel());
-//        try {
-//            ctx.close().addListener(new ChannelFutureListener() {
-//                @Override
-//                public void operationComplete(ChannelFuture channelFuture) throws Exception {
-//                    LOGGER.info("read idle, so channel closed: {}", ctx);
-//                }
-//            });
-//        } catch (Exception e) {
-//            LOGGER.error("HeartBeatHandler.onReadIdle exception", e);
-//        }
+        try {
+            ctx.close().addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                    LOGGER.info("read idle, so channel closed: {}", ctx);
+                }
+            });
+        } catch (Exception e) {
+            LOGGER.error("HeartBeatHandler.onReadIdle exception", e);
+        }
     }
 
     private void onWriteIdle(final ChannelHandlerContext ctx) throws InterruptedException {
@@ -72,17 +72,17 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
             ctx.writeAndFlush(buf).sync();
             LOGGER.debug("after write heart {} beat to {}", index, ctx.channel());
         } else {
-//            try {
-//                LOGGER.info("ctx is inactive, so about to close {}", ctx);
-//                ctx.close().addListener(new ChannelFutureListener() {
-//                    @Override
-//                    public void operationComplete(ChannelFuture channelFuture) throws Exception {
-//                        LOGGER.info("ctx is inactive, so close {} finished", ctx);
-//                    }
-//                });
-//            } catch (Exception e) {
-//                LOGGER.error("close exception:", e);
-//            }
+            try {
+                LOGGER.info("ctx is inactive, so about to close {}", ctx);
+                ctx.close().addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                        LOGGER.info("ctx is inactive, so close {} finished", ctx);
+                    }
+                });
+            } catch (Exception e) {
+                LOGGER.error("close exception:", e);
+            }
         }
     }
 }
