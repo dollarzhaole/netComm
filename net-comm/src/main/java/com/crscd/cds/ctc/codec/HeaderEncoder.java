@@ -26,7 +26,7 @@ public class HeaderEncoder extends MessageToByteEncoder<NegotiationRequestMessag
 
         out.writeIntLE(VERSION);
         out.writeIntLE(0);
-        out.writeByte(PackageType.NEGOTIATION_REQUEST);
+        out.writeByte(PackageDefine.NEGOTIATION_REQUEST);
         out.writeIntLE((int) packageSeq.getAndIncrement());
 
         if (packageSeq.get() > Integer.MAX_VALUE * 2L) {

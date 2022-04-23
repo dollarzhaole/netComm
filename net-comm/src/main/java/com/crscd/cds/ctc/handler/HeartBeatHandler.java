@@ -1,6 +1,6 @@
 package com.crscd.cds.ctc.handler;
 
-import com.crscd.cds.ctc.protocol.PackageType;
+import com.crscd.cds.ctc.protocol.PackageDefine;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -21,13 +21,13 @@ import org.slf4j.LoggerFactory;
  */
 public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HeartBeatHandler.class);
-    private static final ByteBuf HEART_BEAT_BUF = Unpooled.buffer(13);
+    private static final ByteBuf HEART_BEAT_BUF = Unpooled.buffer(PackageDefine.HEART_BEAT_LENGTH);
     private int index = 0;
 
     static {
-        HEART_BEAT_BUF.writeIntLE(0x01);
+        HEART_BEAT_BUF.writeIntLE(PackageDefine.CURRENT_VERSION);
         HEART_BEAT_BUF.writeIntLE(0);
-        HEART_BEAT_BUF.writeByte(PackageType.HEART_BEAT);
+        HEART_BEAT_BUF.writeByte(PackageDefine.HEART_BEAT);
         HEART_BEAT_BUF.writeIntLE(0);
     }
 

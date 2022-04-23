@@ -3,7 +3,7 @@ package com.crscd.cds.ctc.handler;
 import com.crscd.cds.ctc.filter.FilterRegister;
 import com.crscd.cds.ctc.protocol.MessageHead;
 import com.crscd.cds.ctc.protocol.NegotiationResponseMessage;
-import com.crscd.cds.ctc.protocol.PackageType;
+import com.crscd.cds.ctc.protocol.PackageDefine;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -29,7 +29,7 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     static {
         ACK_BUFFER.writeIntLE(0x01);
         ACK_BUFFER.writeIntLE(0);
-        ACK_BUFFER.writeByte(PackageType.ACK_CONFIRM);
+        ACK_BUFFER.writeByte(PackageDefine.ACK_CONFIRM);
     }
 
     @Override
@@ -48,16 +48,16 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         short type = byteBuf.readUnsignedByte();
         byteBuf.readUnsignedIntLE();
 
-        if (type == PackageType.NEGOTIATION_RESPONSE) {
+        if (type == PackageDefine.NEGOTIATION_RESPONSE) {
             doNegotiationResponse(channelHandlerContext, byteBuf);
             sendRegisterRequest(channelHandlerContext);
             return false;
-        } else if (type == PackageType.HEART_BEAT) {
+        } else if (type == PackageDefine.HEART_BEAT) {
             doHeartBeat(channelHandlerContext);
             return false;
-        } else if (type == PackageType.DATA) {
+        } else if (type == PackageDefine.DATA) {
             checkAndSendAckIfNecessary(channelHandlerContext, byteBuf);
-        } else if (type == PackageType.ACK_CONFIRM) {
+        } else if (type == PackageDefine.ACK_CONFIRM) {
             doAckConfirm(channelHandlerContext);
         }
 

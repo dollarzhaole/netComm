@@ -4,7 +4,6 @@ package com.crscd.cds.ctc.client;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import com.crscd.cds.ctc.filter.FilterRegister;
 import com.crscd.cds.ctc.handler.*;
 import com.crscd.cds.ctc.protocol.ApplicationData;
 import com.crscd.cds.ctc.protocol.MessageHead;
@@ -63,7 +62,7 @@ public class NettyClient {
                     loop.schedule(new Runnable() {
                         @Override
                         public void run() {
-                            System.out.println("not connect service");
+                            LOGGER.info(">>>>>>>>>> can not connect server: {}:{}", host, port);
                             start();
                         }
                     }, 1L, TimeUnit.SECONDS);

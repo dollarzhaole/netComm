@@ -1,6 +1,6 @@
 package com.crscd.cds.ctc.handler;
 
-import com.crscd.cds.ctc.protocol.PackageType;
+import com.crscd.cds.ctc.protocol.PackageDefine;
 import com.crscd.cds.ctc.utils.HexUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -17,11 +17,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * @date 2022-04-14
  */
 public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
-    private final AtomicLong packageSeq = new AtomicLong(1);
-    private final AtomicLong doubleNetSeq = new AtomicLong(1);
-    private static final int OFFSET_LENGTH = 4;
-    public static final int VERSION = 0x01;
     private static final Logger LOGGER = LoggerFactory.getLogger(DoubleNetSeqOutBoundHandler.class);
+    private final AtomicLong packageSeq = new AtomicLong(1);
+    private final int[] sendWindow = new int[PackageDefine.MAX_WINDOW_SIZE];
+    private final long sendSequence = packageSeq.get();
+    private final int sendWindowSize = 5;
+    private final AtomicLong doubleNetSeq = new AtomicLong(1);
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         LOGGER.debug("DoubleNetSeqOutBoundHandler: {}", msg);
@@ -38,12 +39,10 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
         ByteBuf out = PooledByteBufAllocator.DEFAULT.buffer();
 
         // 设置包头
-        out.writeIntLE(VERSION);
+        out.writeIntLE(PackageDefine.CURRENT_VERSION);
         out.writeIntLE(data.readableBytes() + 8);
-        out.writeByte(PackageType.DATA);
+        out.writeByte(PackageDefine.DATA);
         out.writeIntLE((int) packageSeq.getAndIncrement());
-
-        System.out.printf("package length: %d%n\n", data.readableBytes() + 8);
 
         // 设置双网层
         long seq = doubleNetSeq.getAndIncrement();
@@ -56,6 +55,6 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
 
         byte[] bytes = new byte[out.readableBytes()];
         out.getBytes(0, bytes);
-        LOGGER.debug("send data: {}", HexUtils.bytesToHex(bytes, 20));
+        LOGGER.trace("send data: {}", HexUtils.bytesToHex(bytes, 20));
     }
 }
