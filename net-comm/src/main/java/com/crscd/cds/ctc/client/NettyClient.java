@@ -4,6 +4,8 @@ package com.crscd.cds.ctc.client;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import com.crscd.cds.ctc.filter.FilterRegister;
+import com.crscd.cds.ctc.flow.FlowController;
 import com.crscd.cds.ctc.handler.*;
 import com.crscd.cds.ctc.protocol.ApplicationData;
 import com.crscd.cds.ctc.protocol.MessageHead;
@@ -31,24 +33,21 @@ public class NettyClient {
     private Channel channel;
     private Bootstrap bootstrap = null;
 
-    private final NetAddress localAddress;
+    private FlowController flowController = new FlowController(2, 5);
 
-    public NettyClient(String host, int port, NetAddress localAddress) {
+    public NettyClient(String host, int port, NetAddress localAddress, FilterRegister register) {
         this.host = host;
         this.port = port;
-        this.localAddress = localAddress;
 
-        MessageHead.setSrc(localAddress);
-
-        init();
+        init(localAddress, register);
     }
 
-    private void init() {
+    private void init(NetAddress localAddress, FilterRegister register) {
         bootstrap = new Bootstrap();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         bootstrap.group(workerGroup).option(ChannelOption.SO_KEEPALIVE, true)
                 .channel(NioSocketChannel.class)
-                .handler(new NetCommChannelInitializer(this));
+                .handler(new NetCommChannelInitializer(this, flowController, localAddress, register));
     }
 
     public void start() {
@@ -73,7 +72,7 @@ public class NettyClient {
         });
     }
 
-    public void sendData(ApplicationData data) throws InterruptedException {
+    public void sendData(final byte[] data, final short type, final short func) {
         if (getChannel() == null) {
             LOGGER.debug("not connected, send fail {}", channel);
             return;
@@ -84,9 +83,13 @@ public class NettyClient {
             return;
         }
 
-        MessageHead msg = MessageHead.createApplicationData(data.getType(), data.getFunc(), data.getData());
-        getChannel().writeAndFlush(msg).sync();
-        LOGGER.debug("channel {} send data {} successfully", channel, data);
+        MessageHead msg = MessageHead.createApplicationData(type, func, data);
+        getChannel().writeAndFlush(msg).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                LOGGER.debug("send data {}-{}: {} {}", type, func, data, channelFuture.isSuccess());
+            }
+        });
     }
 
     public void sendData(byte[] data) {
@@ -123,7 +126,13 @@ public class NettyClient {
         localAddress.setUserType((short) 0x01);
         localAddress.setUserId(0x01);
 
-        NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress);
+        ArrayList<FilterRegister.TypeFunc> funcs = new ArrayList<FilterRegister.TypeFunc>();
+        funcs.add(FilterRegister.TypeFunc.create((short) 0xFF, (short) 0xFF));
+
+        FilterRegister.ClientAddress address = FilterRegister.ClientAddress.create(0x01, 0x02, 0x01);
+        FilterRegister register = FilterRegister.create(funcs, address);
+
+        NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress, register);
         nettyClient.start();
 
         byte[] bytes = new byte[10];
@@ -147,5 +156,13 @@ public class NettyClient {
                 e.printStackTrace();
             }
         }
+    }
+
+    public boolean isActive() {
+        if (channel == null) {
+            return false;
+        }
+
+        return channel.isActive();
     }
 }

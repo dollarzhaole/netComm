@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.handler;
 
 import com.crscd.cds.ctc.filter.FilterRegister;
+import com.crscd.cds.ctc.flow.FlowController;
 import com.crscd.cds.ctc.protocol.MessageHead;
 import com.crscd.cds.ctc.protocol.NegotiationResponseMessage;
 import com.crscd.cds.ctc.protocol.PackageDefine;
@@ -21,15 +22,19 @@ import java.util.ArrayList;
  */
 public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(PackageChannelInboundHandler.class);
-    private long lastRecSequence = 0;
-    private int recCount = 0;
-    private int windowSize = 5;
+    private final FlowController flowController;
+    private FilterRegister register;
 
     private static final ByteBuf ACK_BUFFER = Unpooled.buffer(13);
     static {
         ACK_BUFFER.writeIntLE(0x01);
         ACK_BUFFER.writeIntLE(0);
         ACK_BUFFER.writeByte(PackageDefine.ACK_CONFIRM);
+    }
+
+    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register) {
+        this.flowController = flowController;
+        this.register = register;
     }
 
     @Override
@@ -46,7 +51,7 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         byteBuf.readUnsignedIntLE();
         byteBuf.readUnsignedIntLE();
         short type = byteBuf.readUnsignedByte();
-        byteBuf.readUnsignedIntLE();
+        long sequence = byteBuf.readUnsignedIntLE();
 
         if (type == PackageDefine.NEGOTIATION_RESPONSE) {
             doNegotiationResponse(channelHandlerContext, byteBuf);
@@ -56,21 +61,20 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
             doHeartBeat(channelHandlerContext);
             return false;
         } else if (type == PackageDefine.DATA) {
-            checkAndSendAckIfNecessary(channelHandlerContext, byteBuf);
+            checkAndSendAckIfNecessary(channelHandlerContext, sequence);
         } else if (type == PackageDefine.ACK_CONFIRM) {
-            doAckConfirm(channelHandlerContext);
+            doAckConfirm(channelHandlerContext, sequence);
+            return false;
         }
 
         return true;
     }
 
-    private void checkAndSendAckIfNecessary(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) {
-        lastRecSequence = getPackageSequence(byteBuf);
-        recCount += 1;
-
-        if (windowSize > 0 && recCount >= windowSize) {
-            sendAck(channelHandlerContext, lastRecSequence);
-            recCount = 0;
+    private void checkAndSendAckIfNecessary(ChannelHandlerContext channelHandlerContext, long sequence) {
+        flowController.updateReceive(sequence);
+        if (flowController.isNeedToAck()) {
+            sendAck(channelHandlerContext, sequence);
+            flowController.onSendAck();
         }
     }
 
@@ -94,17 +98,13 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         throw new RuntimeException("data's length is less than 13");
     }
 
-    private void doAckConfirm(ChannelHandlerContext channelHandlerContext) {
+    private void doAckConfirm(ChannelHandlerContext channelHandlerContext, long sequence) {
         LOGGER.debug("recv ack from {}", channelHandlerContext);
+        flowController.onReceiveAck(sequence);
     }
 
     private void sendRegisterRequest(final ChannelHandlerContext channelHandlerContext) throws InterruptedException {
-        ArrayList<FilterRegister.TypeFunc> funcs = new ArrayList<FilterRegister.TypeFunc>();
-        funcs.add(FilterRegister.TypeFunc.create((short) 0xFF, (short) 0xFF));
-
-        FilterRegister.ClientAddress address = FilterRegister.ClientAddress.create(0x01, 0x02, 0x01);
-
-        MessageHead msg = MessageHead.createRegisterMessage(FilterRegister.create(funcs, address));
+        MessageHead msg = MessageHead.createRegisterMessage(register);
 
         channelHandlerContext.channel().writeAndFlush(msg).sync();
         LOGGER.info("send register xml to {} successfully", channelHandlerContext);

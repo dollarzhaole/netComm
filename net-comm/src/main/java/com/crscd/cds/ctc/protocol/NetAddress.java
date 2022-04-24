@@ -7,18 +7,27 @@ import io.netty.buffer.ByteBuf;
  * @date 2022-04-14
  */
 public class NetAddress {
-    private short bureauType;
+    private short bureauType = 0xFF;
     private short bureauCode;
-    private short sysType;
-    private short sysId;
+    private short sysType = 0xFF;
+    private short sysId = 0xFF;
     private short unitType;
     private int unitId;
-    private short devType;
-    private int devId;
-    private short procType;
-    private int procId;
-    private short userType;
-    private long userId;
+    private short devType = 0xFF;
+    private int devId = 0xFF;
+    private short procType = 0xFF;
+    private int procId = 0xFF;
+    private short userType = 0xFF;
+    private long userId = 0xFF;
+
+    public static NetAddress create(short bureauCode, short unitType, int unitId) {
+        NetAddress address = new NetAddress();
+        address.setBureauCode(bureauCode);
+        address.setUnitType(unitType);
+        address.setUnitId(unitId);
+
+        return address;
+    }
 
     public short getBureauType() {
         return bureauType;

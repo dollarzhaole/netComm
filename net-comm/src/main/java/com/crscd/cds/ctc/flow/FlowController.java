@@ -12,17 +12,28 @@ public class FlowController {
     private static final int MAX_SEND_WINDOW_SIZE = 255;
     private static final int MAX_COMM_WIN_SIZE = 5;
 
+    private final int ackOverTimeInterval;
+
     // 发送窗口，保存的是发送
     private final long[] sendWindow = new long[MAX_SEND_WINDOW_SIZE];
     private final long[] recWindow = new long[MAX_SEND_WINDOW_SIZE];
 
-    private final int windowSize = 5;
+    private final int windowSize;
 
     private int recCount = 0;
-    private int recSequence = 0;
+    private long recSequence = 0;
 
     private int sendCount = 0;
     private long sendSequence = 0;
+
+    private boolean isNeedReceiveAck = false;
+
+    private final Object locker = new Object();
+
+    public FlowController(int ackOverTimeInterval, int windowSize) {
+        this.ackOverTimeInterval = ackOverTimeInterval;
+        this.windowSize = windowSize;
+    }
 
     public boolean isNeedToAck() {
         if (windowSize == 0) {
@@ -41,7 +52,7 @@ public class FlowController {
         return false;
     }
 
-    public void updateReceive(int seq) {
+    public void updateReceive(long seq) {
         if (windowSize > 0 && recCount < MAX_COMM_WIN_SIZE) {
             recWindow[recCount] = seq;
             recCount += 1;
@@ -58,7 +69,7 @@ public class FlowController {
         recCount = 0;
     }
 
-    public void onReceiveAck(long seq) {
+    public synchronized void onReceiveAck(long seq) {
         if (sendCount <= 0) {
             LOGGER.warn("sendCount<=0, but rec ack of seq {}", seq);
             return;
@@ -76,6 +87,8 @@ public class FlowController {
         // 移动滑动窗口
         System.arraycopy(sendWindow, i + 1, sendWindow, 0, sendCount - i);
         sendCount = sendCount - i - 1;
+
+        locker.notify();
     }
 
     public void updateSend() {
@@ -89,7 +102,22 @@ public class FlowController {
         if (sendCount >= windowSize) {
             LOGGER.debug("need receive ack: sendWindow={}", sendWindow);
 
-            // todo 设置信号量，不能再发送应用数据了
+            isNeedReceiveAck = true;
         }
+    }
+
+    public long getAndIncrementSendSequence() {
+        long result = sendSequence;
+        sendSequence += 1;
+
+        return result;
+    }
+
+    public synchronized void waitAckIfNecessary() throws InterruptedException {
+        if (!isNeedReceiveAck) {
+            return;
+        }
+
+        locker.wait(ackOverTimeInterval * 1000);
     }
 }

@@ -1,12 +1,11 @@
 package com.crscd.cds.ctc.handler;
 
+import com.crscd.cds.ctc.flow.FlowController;
 import com.crscd.cds.ctc.protocol.PackageDefine;
 import com.crscd.cds.ctc.utils.HexUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
+import io.netty.channel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,11 +17,13 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(DoubleNetSeqOutBoundHandler.class);
-    private final AtomicLong packageSeq = new AtomicLong(1);
-    private final int[] sendWindow = new int[PackageDefine.MAX_WINDOW_SIZE];
-    private final long sendSequence = packageSeq.get();
-    private final int sendWindowSize = 5;
+    private final FlowController flowController;
     private final AtomicLong doubleNetSeq = new AtomicLong(1);
+
+    public DoubleNetSeqOutBoundHandler(FlowController flowController) {
+        this.flowController = flowController;
+    }
+
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         LOGGER.debug("DoubleNetSeqOutBoundHandler: {}", msg);
@@ -34,6 +35,11 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
 
         LOGGER.debug("msg is ByteBuf");
 
+        waiAckIfNecessary(ctx);
+
+        flowController.updateSend();
+        long packageSequence = flowController.getAndIncrementSendSequence();
+
         ByteBuf data = (ByteBuf) msg;
 
         ByteBuf out = PooledByteBufAllocator.DEFAULT.buffer();
@@ -42,7 +48,7 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
         out.writeIntLE(PackageDefine.CURRENT_VERSION);
         out.writeIntLE(data.readableBytes() + 8);
         out.writeByte(PackageDefine.DATA);
-        out.writeIntLE((int) packageSeq.getAndIncrement());
+        out.writeIntLE((int) packageSequence);
 
         // 设置双网层
         long seq = doubleNetSeq.getAndIncrement();
@@ -56,5 +62,19 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
         byte[] bytes = new byte[out.readableBytes()];
         out.getBytes(0, bytes);
         LOGGER.trace("send data: {}", HexUtils.bytesToHex(bytes, 20));
+    }
+
+    private void waiAckIfNecessary(ChannelHandlerContext ctx) {
+        try {
+            flowController.waitAckIfNecessary();
+        } catch (InterruptedException e) {
+            LOGGER.error("waiAckIfNecessary InterruptedException, so close channel", e);
+            ctx.close().addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                    LOGGER.info("close channel because of ack overtime: {}", channelFuture.isSuccess());
+                }
+            });
+        }
     }
 }

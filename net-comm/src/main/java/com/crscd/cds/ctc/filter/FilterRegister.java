@@ -1,5 +1,7 @@
 package com.crscd.cds.ctc.filter;
 
+import com.crscd.cds.ctc.protocol.NetAddress;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlElement;
@@ -81,6 +83,15 @@ public class FilterRegister {
         private int unitType;
         @XmlElement(name = "unit_id")
         private int unitId;
+
+        public static ClientAddress create(NetAddress netAddress) {
+            ClientAddress clientAddress = new ClientAddress();
+            clientAddress.setBureauCode(netAddress.getBureauCode());
+            clientAddress.setUnitType(netAddress.getUnitType());
+            clientAddress.setUnitId(netAddress.getUnitId());
+
+            return clientAddress;
+        }
 
         public static ClientAddress create(int bureauCode, int unitType, int unitId) {
             ClientAddress clientAddress = new ClientAddress();

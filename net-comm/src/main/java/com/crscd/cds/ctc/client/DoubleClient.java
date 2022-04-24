@@ -34,4 +34,24 @@ public class DoubleClient {
             client2.start();
         }
     }
+
+    public void send(byte[] data) {
+        if (client1 != null && client1.isActive()) {
+            client1.sendData(data);
+        }
+
+        if (client2 != null && client2.isActive()) {
+            client2.sendData(data);
+        }
+    }
+
+    public void send(byte[] data, short type, short func) {
+        if (client1 != null && client1.isActive()) {
+            client1.sendData(data, type, func);
+        }
+
+        if (client2 != null && client2.isActive()) {
+            client2.sendData(data, type, func);
+        }
+    }
 }
