@@ -27,6 +27,7 @@ public class NetCommListenerAnnotationBeanPostProcessor implements BeanPostProce
 
     private static final int MAX_CONCURRENT_CONSUMERS_LIMIT = Runtime.getRuntime().availableProcessors() * 2;
 
+
     private BeanFactory beanFactory;
 
     @Override
@@ -44,33 +45,21 @@ public class NetCommListenerAnnotationBeanPostProcessor implements BeanPostProce
         Class<?> targetClass = AopUtils.getTargetClass(bean);
         ListenerMethod methodAnnotation = getMethodAnnotation(targetClass);
         if(methodAnnotation != null) {
-            processAmazonSQSListener(methodAnnotation.annotations, bean, methodAnnotation.method);
+            processNetCommListener(methodAnnotation.annotations, bean, methodAnnotation.method);
         }
         return bean;
     }
 
-    private void processAmazonSQSListener(NetCommListener annotation, Object bean, Method method) {
-        SimpleNetCommListenerContainerFactory containerFactory = beanFactory.getBean("amazonSQSListenerContainerFactory", SimpleNetCommListenerContainerFactory.class);
+    private void processNetCommListener(NetCommListener annotation, Object bean, Method method) {
+        SimpleNetCommListenerContainerFactory containerFactory = beanFactory.getBean("netCommListenerContainerFactory", SimpleNetCommListenerContainerFactory.class);
+        NetCommDispatcher dispatcher = containerFactory.getDispatcher();
         Method useMethod = checkProxy(method, bean);
         short type = annotation.type();
         short func = annotation.func();
         Assert.isTrue(type != 0x00, "net comm message handler's type can not be default 0x00");
         Assert.isTrue(func != 0x00, "net comm message handler's func can not be default 0x00");
-        SimpleMessageListenerContainer listenerContainer = containerFactory.createListenerContainer(queue, message -> useMethod.invoke(bean, message));
-        int consumers = annotation.consumers();
-        if(consumers > 1 && consumers <= MAX_CONCURRENT_CONSUMERS_LIMIT) {
-            listenerContainer.setMaxConcurrentConsumers(consumers);
-        }
-        if (listenerContainer instanceof InitializingBean) {
-            try {
-                ((InitializingBean) listenerContainer).afterPropertiesSet();
-            }
-            catch (Exception ex) {
-                throw new BeanInitializationException("Failed to initialize message listener container", ex);
-            }
-        }
-        listenerContainer.start();
-
+        SimpleMessageListenerContainer listenerContainer = containerFactory.createListenerContainer(type, func, message -> useMethod.invoke(bean, message));
+        dispatcher.addListener(listenerContainer);
     }
 
     private ListenerMethod getMethodAnnotation(Class<?> targetClass) {
@@ -81,14 +70,15 @@ public class NetCommListenerAnnotationBeanPostProcessor implements BeanPostProce
                 methodAnnotations.add(listenerAnnotations);
             }
         }, ReflectionUtils.USER_DECLARED_METHODS);
-        if (methodAnnotations.isEmpty() && methodAnnotations.isEmpty()) {
+
+        if (methodAnnotations.size() == 0) {
             return null;
         }
         return methodAnnotations.get(0);
     }
 
     private ListenerMethod findListenerAnnotation(Method method) {
-        AmazonSQSListener ann = AnnotationUtils.findAnnotation(method, AmazonSQSListener.class);
+        NetCommListener ann = AnnotationUtils.findAnnotation(method, NetCommListener.class);
         if(ann == null) {
             return null;
         }
@@ -129,15 +119,13 @@ public class NetCommListenerAnnotationBeanPostProcessor implements BeanPostProce
 
     private static class ListenerMethod {
 
-        final Method method; // NOSONAR
+        final Method method;
 
-        final NetCommListener annotations; // NOSONAR
+        final NetCommListener annotations;
 
-        ListenerMethod(Method method, NetCommListener annotations) { // NOSONAR
+        ListenerMethod(Method method, NetCommListener annotations) {
             this.method = method;
             this.annotations = annotations;
         }
-
     }
-
 }

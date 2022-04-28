@@ -1,28 +1,27 @@
 package com.crscd.cds.spring.netcomm.core;
 
-import com.amazonaws.services.sqs.AmazonSQS;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
 
 import java.util.concurrent.Executor;
 
 /**
  * 抽象 Amazon SQS 监听容器创建工厂类
- * @param <C> Amazon SQS 监听容器
+ * @param <C> 监听容器
  *
- * @author zhaoyong_sh
+ * @author zhaole
+ * @date 2022-04-24
  */
-public abstract class AbstractAmazonSQSListenerContainerFactory<C extends AbstractMessageListenerContainer>
-        implements AmazonSQSListenerContainerFactory<C>, InitializingBean {
+public abstract class AbstractNetCommListenerContainerFactory<C extends AbstractMessageListenerContainer>
+        implements NetCommListenerContainerFactory<C>, InitializingBean {
 
-    private AmazonSQS amazonSQS;
+    private NetCommDispatcher dispatcher;
 
     private Executor taskExecutor;
 
     private Integer prefetchCount;
 
-    public void setAmazonSQS(AmazonSQS amazonSQS) {
-        this.amazonSQS = amazonSQS;
+    public void setDispatcher(NetCommDispatcher dispatcher) {
+        this.dispatcher = dispatcher;
     }
 
     public void setTaskExecutor(Executor taskExecutor) {
@@ -33,29 +32,25 @@ public abstract class AbstractAmazonSQSListenerContainerFactory<C extends Abstra
         this.prefetchCount = prefetchCount;
     }
 
+    public NetCommDispatcher getDispatcher() {
+        return dispatcher;
+    }
+
     @Override
     public C createListenerContainer(short type, short func, MessageListener messageListener) {
         C instance = createContainerInstance();
-        if(this.amazonSQS != null) {
-            instance.setAmazonSQS(amazonSQS);
-        }
-        if(this.taskExecutor != null) {
-            instance.setTaskExecutor(taskExecutor);
-        }
-        if(this.prefetchCount != null){
-            instance.setPrefetchCount(prefetchCount);
-        }
 
         instance.setType(type);
         instance.setFunc(func);
         instance.setMessageListener(messageListener);
         initializeContainer(instance);
+
         return instance;
     }
 
     @Override
     public void afterPropertiesSet(){
-        Assert.notNull(amazonSQS, "amazon sqs info can not be null");
+
     }
 
     protected abstract C createContainerInstance();

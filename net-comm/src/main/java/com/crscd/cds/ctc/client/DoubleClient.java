@@ -30,9 +30,9 @@ public class DoubleClient {
             client1.start();
         }
 
-        if (client2 != null) {
-            client2.start();
-        }
+//        if (client2 != null) {
+//            client2.start();
+//        }
     }
 
     public void send(byte[] data) {

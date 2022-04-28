@@ -6,6 +6,7 @@ import com.crscd.cds.ctc.codec.HeaderEncoder;
 import com.crscd.cds.ctc.codec.MessageEncoder;
 import com.crscd.cds.ctc.filter.FilterRegister;
 import com.crscd.cds.ctc.flow.FlowController;
+import com.crscd.cds.ctc.flow.InboundDispatcher;
 import com.crscd.cds.ctc.protocol.NetAddress;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -24,6 +25,7 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
     private final FlowController flowController;
     private final NetAddress localAddress;
     private FilterRegister register;
+    private final InboundDispatcher inboundDispatcher;
 
     private static final int MAX_PACKAGE_LENGTH = Integer.MAX_VALUE;
     private static final int LENGTH_FIELD_OFFSET = 4;
@@ -31,11 +33,12 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
     private static final int LENGTH_ADJUSTMENT = 5;
     private static final int INITIAL_BYTES_TO_STRIP = 0;
 
-    public NetCommChannelInitializer(NettyClient client, FlowController flowController, NetAddress localAddress, FilterRegister register) {
+    public NetCommChannelInitializer(NettyClient client, FlowController flowController, NetAddress localAddress, FilterRegister register, InboundDispatcher inboundDispatcher) {
         this.client = client;
         this.flowController = flowController;
         this.localAddress = localAddress;
         this.register = register;
+        this.inboundDispatcher = inboundDispatcher;
     }
 
     @Override
@@ -47,7 +50,7 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast("PackageChannelInboundHandler", new PackageChannelInboundHandler(flowController, register));
         pipeline.addLast("DoubleNetSeqInboundHandler", new DoubleNetSeqInboundHandler());
         pipeline.addLast("ForwardInboundHandler", new ForwardInboundHandler());
-        pipeline.addLast("decoder", new MessageDecoder());
+        pipeline.addLast("decoder", new MessageDecoder(inboundDispatcher));
         pipeline.addLast("encoder", new HeaderEncoder());
         pipeline.addLast("handler", new NettyClientHandler(client));
         pipeline.addLast("DoubleNetSeqOutBoundHandler", new DoubleNetSeqOutBoundHandler(flowController));

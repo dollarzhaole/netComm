@@ -88,7 +88,7 @@ public class FlowController {
         System.arraycopy(sendWindow, i + 1, sendWindow, 0, sendCount - i);
         sendCount = sendCount - i - 1;
 
-        locker.notify();
+//        locker.notify();
     }
 
     public void updateSend() {
@@ -118,6 +118,6 @@ public class FlowController {
             return;
         }
 
-        locker.wait(ackOverTimeInterval * 1000);
+//        locker.wait(ackOverTimeInterval * 1000);
     }
 }

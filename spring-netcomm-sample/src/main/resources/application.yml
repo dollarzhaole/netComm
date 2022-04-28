@@ -1,0 +1,18 @@
+spring:
+  net-comm:
+    server1:
+      host: 10.2.54.251
+      port: 8001
+      local-host: 127.0.0.1
+#    server2:
+#      host: 10.2.54.251
+#      port: 8001
+#      local-host: 172.0.0.1
+    in-condition:
+      rec:
+        - type: 0xFF
+        - func: 0xFF
+    local:
+      bureau-code: 1
+      unit-type: STATION
+      unit-id: 1

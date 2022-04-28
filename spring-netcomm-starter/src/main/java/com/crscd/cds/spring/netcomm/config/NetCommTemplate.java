@@ -11,7 +11,7 @@ public class NetCommTemplate {
 
     public NetCommTemplate(DoubleClient client) {
         this.client = client;
-        client.start();
+//        client.start();
     }
 
     public void sendData(byte[] data) {

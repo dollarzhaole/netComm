@@ -1,5 +1,6 @@
 package com.crscd.cds.ctc.codec;
 
+import com.crscd.cds.ctc.flow.InboundDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.netty.buffer.ByteBuf;
@@ -14,6 +15,12 @@ import java.util.List;
  */
 public class MessageDecoder extends ByteToMessageDecoder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageDecoder.class);
+    private final InboundDispatcher dispatcher;
+
+    public MessageDecoder(InboundDispatcher dispatcher) {
+        this.dispatcher = dispatcher;
+    }
+
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
         LOGGER.debug("ApplicationDataDecoder decode, byteBuf={}", byteBuf);
@@ -25,5 +32,9 @@ public class MessageDecoder extends ByteToMessageDecoder {
         bodyBuf.getBytes(0, data);
 
         list.add(data);
+
+        if (dispatcher != null && data.length > 2) {
+            dispatcher.dispatch(data[0], data[1], data);
+        }
     }
 }

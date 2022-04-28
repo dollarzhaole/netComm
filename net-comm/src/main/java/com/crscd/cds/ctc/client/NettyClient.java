@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.crscd.cds.ctc.filter.FilterRegister;
 import com.crscd.cds.ctc.flow.FlowController;
+import com.crscd.cds.ctc.flow.InboundDispatcher;
 import com.crscd.cds.ctc.handler.*;
 import com.crscd.cds.ctc.protocol.ApplicationData;
 import com.crscd.cds.ctc.protocol.MessageHead;
@@ -30,14 +31,16 @@ public class NettyClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(NettyClient.class);
     private String host;
     private int port;
+    private final InboundDispatcher inboundDispatcher;
     private Channel channel;
     private Bootstrap bootstrap = null;
 
     private FlowController flowController = new FlowController(2, 5);
 
-    public NettyClient(String host, int port, NetAddress localAddress, FilterRegister register) {
+    public NettyClient(String host, int port, NetAddress localAddress, FilterRegister register, InboundDispatcher dispatcher) {
         this.host = host;
         this.port = port;
+        inboundDispatcher = dispatcher;
 
         init(localAddress, register);
     }
@@ -47,7 +50,9 @@ public class NettyClient {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         bootstrap.group(workerGroup).option(ChannelOption.SO_KEEPALIVE, true)
                 .channel(NioSocketChannel.class)
-                .handler(new NetCommChannelInitializer(this, flowController, localAddress, register));
+                .handler(new NetCommChannelInitializer(this, flowController, localAddress, register, inboundDispatcher));
+
+        MessageHead.setSrc(localAddress);
     }
 
     public void start() {
@@ -132,7 +137,7 @@ public class NettyClient {
         FilterRegister.ClientAddress address = FilterRegister.ClientAddress.create(0x01, 0x02, 0x01);
         FilterRegister register = FilterRegister.create(funcs, address);
 
-        NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress, register);
+        NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress, register, null);
         nettyClient.start();
 
         byte[] bytes = new byte[10];

@@ -107,7 +107,7 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         MessageHead msg = MessageHead.createRegisterMessage(register);
 
         channelHandlerContext.channel().writeAndFlush(msg).sync();
-        LOGGER.info("send register xml to {} successfully", channelHandlerContext);
+        LOGGER.info("send register xml to {} successfully", channelHandlerContext.channel());
     }
 
     private void doNegotiationResponse(ChannelHandlerContext context, ByteBuf byteBuf) {
