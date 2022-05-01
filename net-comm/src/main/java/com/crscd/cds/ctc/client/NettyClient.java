@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.client;
 
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -56,6 +57,7 @@ public class NettyClient {
     }
 
     public void start() {
+        bootstrap.localAddress(new InetSocketAddress( 9999));
         ChannelFuture f = bootstrap.connect(host, port);
         //断线重连
         f.addListener(new ChannelFutureListener() {

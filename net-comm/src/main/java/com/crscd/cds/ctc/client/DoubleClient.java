@@ -20,7 +20,7 @@ public class DoubleClient {
         this.client2 = client2;
     }
 
-    public void start() {
+    public void start() throws InterruptedException {
         if (client1 == null && client2 == null) {
             LOGGER.warn("client1 and client2 are both null, cannot start");
             return;
