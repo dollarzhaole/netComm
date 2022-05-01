@@ -1,7 +1,11 @@
 package com.crscd.cds.ctc.flow;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author zhaole
@@ -11,6 +15,8 @@ public class FlowController {
     private static final Logger LOGGER = LoggerFactory.getLogger(FlowController.class);
     private static final int MAX_SEND_WINDOW_SIZE = 255;
     private static final int MAX_COMM_WIN_SIZE = 5;
+    private static final int MAX_WAITING_FOR_ACK_QUEUE_LENGTH = 50;
+    private Channel channel;
 
     private final int ackOverTimeInterval;
 
@@ -24,15 +30,29 @@ public class FlowController {
     private long recSequence = 0;
 
     private int sendCount = 0;
-    private long sendSequence = 0;
+    private long sendSequence = 1;
 
     private boolean isNeedReceiveAck = false;
 
-    private final Object locker = new Object();
+    private final ConcurrentLinkedQueue<WaitingAckCache> waitingAckCaches = new ConcurrentLinkedQueue<WaitingAckCache>();
 
     public FlowController(int ackOverTimeInterval, int windowSize) {
         this.ackOverTimeInterval = ackOverTimeInterval;
         this.windowSize = windowSize;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
+    }
+
+    public void onInactive() {
+        LOGGER.info("on inactive, clear waiting ack cache, reset recCount, recSequence, sendCount to 0 and sendSequence to 1");
+
+        waitingAckCaches.clear();
+        recCount = 0;
+        recSequence = 0;
+        sendCount = 0;
+        sendSequence = 1;
     }
 
     public boolean isNeedToAck() {
@@ -69,26 +89,47 @@ public class FlowController {
         recCount = 0;
     }
 
-    public synchronized void onReceiveAck(long seq) {
+    public void onReceiveAck(long seq) {
         if (sendCount <= 0) {
             LOGGER.warn("sendCount<=0, but rec ack of seq {}", seq);
             return;
         }
 
+        LOGGER.debug("rec {}, sendCount={}, before ack: {}", seq, sendCount, sendWindow);
+
         int i = sendCount;
         while (i >= 0) {
-            if (sendWindow[i] == (int) seq){
+            if (sendWindow[i] == (int) seq) {
                 break;
             }
 
-            i--;
+            if (i > 0) {
+                i--;
+            } else {
+                LOGGER.warn("can not find ack seq: {}", seq);
+                break;
+            }
         }
 
         // 移动滑动窗口
-        System.arraycopy(sendWindow, i + 1, sendWindow, 0, sendCount - i);
+        System.arraycopy(sendWindow, i + 1, sendWindow, 0, sendWindow.length - i - 1);
         sendCount = sendCount - i - 1;
 
-//        locker.notify();
+        isNeedReceiveAck = false;
+
+        LOGGER.debug("after move, i={}, sendCount={}: {}", i, sendCount, sendWindow);
+
+        int j = windowSize - sendCount;
+        while (j > 0 && !waitingAckCaches.isEmpty()) {
+            WaitingAckCache cache = waitingAckCaches.poll();
+            if (cache.context.channel().isActive()) {
+                cache.context.writeAndFlush(cache.data, cache.promise);
+            } else {
+                waitingAckCaches.clear();
+            }
+
+            j--;
+        }
     }
 
     public void updateSend() {
@@ -113,11 +154,47 @@ public class FlowController {
         return result;
     }
 
-    public synchronized void waitAckIfNecessary() throws InterruptedException {
-        if (!isNeedReceiveAck) {
-            return;
+    public int getSendCount() {
+        return sendCount;
+    }
+
+    public long getSendSequence() {
+        return sendSequence;
+    }
+
+    public boolean waitAckIfNecessary() {
+        return isNeedReceiveAck;
+    }
+
+    public void addCache(WaitingAckCache cache) {
+        waitingAckCaches.add(cache);
+
+        if (waitingAckCaches.size() > MAX_WAITING_FOR_ACK_QUEUE_LENGTH) {
+            channel.close().addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                    LOGGER.info("waiting ack cache size is more than {}, so close channel {}",
+                            MAX_WAITING_FOR_ACK_QUEUE_LENGTH, channel);
+                }
+            });
+        }
+    }
+
+    public static class WaitingAckCache {
+        private ChannelHandlerContext context;
+        private ByteBuf data;
+        private ChannelPromise promise;
+
+        private WaitingAckCache() {
         }
 
-//        locker.wait(ackOverTimeInterval * 1000);
+        public static WaitingAckCache create(ChannelHandlerContext context, ByteBuf data, ChannelPromise promise) {
+            WaitingAckCache cache = new WaitingAckCache();
+            cache.context = context;
+            cache.data = data;
+            cache.promise = promise;
+
+            return cache;
+        }
     }
 }

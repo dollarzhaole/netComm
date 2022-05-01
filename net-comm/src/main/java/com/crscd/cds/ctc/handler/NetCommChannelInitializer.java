@@ -52,7 +52,7 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast("ForwardInboundHandler", new ForwardInboundHandler());
         pipeline.addLast("decoder", new MessageDecoder(inboundDispatcher));
         pipeline.addLast("encoder", new HeaderEncoder());
-        pipeline.addLast("handler", new NettyClientHandler(client));
+        pipeline.addLast("handler", new NettyClientHandler(client, flowController));
         pipeline.addLast("DoubleNetSeqOutBoundHandler", new DoubleNetSeqOutBoundHandler(flowController));
         pipeline.addLast("RegisterMessageEncoder", new MessageEncoder());
         pipeline.addLast("ExceptionHandler", new ExceptionHandler());

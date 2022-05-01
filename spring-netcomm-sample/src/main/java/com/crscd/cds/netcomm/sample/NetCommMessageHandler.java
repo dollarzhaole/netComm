@@ -15,7 +15,7 @@ public class NetCommMessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetCommMessageHandler.class);
 
     @NetCommListener(type = 49, func = 50)
-    public void handle(byte[] data) {
-        LOGGER.debug("handler {}", HexUtils.bytesToHex(data, 16));
+    public void handle(RequestMessageContent message) {
+        LOGGER.debug("handle from NetCommMessageHandler {}", message);
     }
 }

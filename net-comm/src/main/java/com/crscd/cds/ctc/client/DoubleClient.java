@@ -54,4 +54,14 @@ public class DoubleClient {
             client2.sendData(data, type, func);
         }
     }
+
+    public void close() {
+        if (client1 != null) {
+            client1.close();
+        }
+
+        if (client2 != null) {
+            client2.close();
+        }
+    }
 }

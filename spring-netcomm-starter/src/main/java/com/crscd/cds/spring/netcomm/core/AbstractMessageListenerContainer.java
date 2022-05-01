@@ -1,11 +1,12 @@
 package com.crscd.cds.spring.netcomm.core;
 
-import com.crscd.cds.ctc.protocol.MessageContent;
+import com.crscd.cds.spring.netcomm.converter.MessageConverter;
+import com.crscd.cds.spring.netcomm.message.MessageContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.Executor;
 
 /**
@@ -20,6 +21,9 @@ public abstract class AbstractMessageListenerContainer implements MessageListene
     private volatile MessageListener messageListener;
     private short type;
     private short func;
+    private Class<? extends MessageContent> parameterType;
+    private MessageConverter messageConverter;
+    private Executor executor;
 
     public MessageListener getMessageListener() {
         return messageListener;
@@ -27,6 +31,10 @@ public abstract class AbstractMessageListenerContainer implements MessageListene
 
     public void setMessageListener(MessageListener messageListener) {
         this.messageListener = messageListener;
+    }
+
+    public void setParameterType(Class<? extends MessageContent> parameterType) {
+        this.parameterType = parameterType;
     }
 
     public short getType() {
@@ -44,11 +52,32 @@ public abstract class AbstractMessageListenerContainer implements MessageListene
     public void setFunc(short func) {
         this.func = func;
     }
+    public void setMessageConverter(MessageConverter messageConverter) {
+        this.messageConverter = messageConverter;
+    }
+
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
+    }
 
     public void invokeListener(byte[] message) throws Exception {
         MessageListener listener = getMessageListener();
+        if (executor == null) {
+            Object object = messageConverter.fromMessage(message, parameterType);
+            listener.onMessage(object);
+            return;
+        }
+
         try {
-            listener.onMessage(message);
+            executor.execute(() -> {
+                try {
+                    Object object = messageConverter.fromMessage(message, parameterType);
+                    listener.onMessage(object);
+                } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+                    LOGGER.debug("exception happened while onMessage: ", e);
+                }
+            });
+
         }
         catch (Exception e) {
             throw wrapToListenerExecutionFailedExceptionIfNeeded(e, message);

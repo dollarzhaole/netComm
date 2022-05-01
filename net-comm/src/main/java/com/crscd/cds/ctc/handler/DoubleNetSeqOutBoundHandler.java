@@ -20,6 +20,7 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
     private final FlowController flowController;
     private final AtomicLong doubleNetSeq = new AtomicLong(1);
 
+
     public DoubleNetSeqOutBoundHandler(FlowController flowController) {
         this.flowController = flowController;
     }
@@ -35,27 +36,12 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
 
         LOGGER.debug("msg is ByteBuf");
 
-        waiAckIfNecessary(ctx);
+        if (waitIfNeedAck()) {
+            waitForAck(ctx, (ByteBuf) msg, promise);
+            return;
+        }
 
-        flowController.updateSend();
-        long packageSequence = flowController.getAndIncrementSendSequence();
-
-        ByteBuf data = (ByteBuf) msg;
-
-        ByteBuf out = PooledByteBufAllocator.DEFAULT.buffer();
-
-        // 设置包头
-        out.writeIntLE(PackageDefine.CURRENT_VERSION);
-        out.writeIntLE(data.readableBytes() + 8);
-        out.writeByte(PackageDefine.DATA);
-        out.writeIntLE((int) packageSequence);
-
-        // 设置双网层
-        long seq = doubleNetSeq.getAndIncrement();
-        out.writeIntLE((int) seq);
-        out.writeIntLE((int) (seq >> (8 * 4)));
-
-        out.writeBytes(data);
+        ByteBuf out = wrap((ByteBuf) msg);
 
         super.write(ctx, out, promise);
 
@@ -64,17 +50,34 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
         LOGGER.trace("send data: {}", HexUtils.bytesToHex(bytes, 20));
     }
 
-    private void waiAckIfNecessary(ChannelHandlerContext ctx) {
-        try {
-            flowController.waitAckIfNecessary();
-        } catch (InterruptedException e) {
-            LOGGER.error("waiAckIfNecessary InterruptedException, so close channel", e);
-            ctx.close().addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    LOGGER.info("close channel because of ack overtime: {}", channelFuture.isSuccess());
-                }
-            });
-        }
+    private void waitForAck(ChannelHandlerContext ctx, ByteBuf msg, ChannelPromise promise) {
+        FlowController.WaitingAckCache cache = FlowController.WaitingAckCache.create(ctx, msg, promise);
+        flowController.addCache(cache);
+    }
+
+    private boolean waitIfNeedAck() {
+        return flowController.waitAckIfNecessary();
+    }
+
+    private ByteBuf wrap(ByteBuf msg) throws Exception {
+        flowController.updateSend();
+        long packageSequence = flowController.getAndIncrementSendSequence();
+
+        ByteBuf out = PooledByteBufAllocator.DEFAULT.buffer();
+
+        // 设置包头
+        out.writeIntLE(PackageDefine.CURRENT_VERSION);
+        out.writeIntLE(msg.readableBytes() + 8);
+        out.writeByte(PackageDefine.DATA);
+        out.writeIntLE((int) packageSequence);
+
+        // 设置双网层
+        long seq = doubleNetSeq.getAndIncrement();
+        out.writeIntLE((int) seq);
+        out.writeIntLE((int) (seq >> (8 * 4)));
+
+        out.writeBytes(msg);
+
+        return out;
     }
 }

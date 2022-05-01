@@ -16,3 +16,7 @@ spring:
       bureau-code: 1
       unit-type: STATION
       unit-id: 1
+
+logging:
+  level:
+    root: debug

@@ -1,5 +1,7 @@
 package com.crscd.cds.spring.netcomm.core;
 
+import com.crscd.cds.spring.netcomm.converter.MessageConverter;
+import com.crscd.cds.spring.netcomm.message.MessageContent;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.util.concurrent.Executor;
@@ -15,21 +17,20 @@ public abstract class AbstractNetCommListenerContainerFactory<C extends Abstract
         implements NetCommListenerContainerFactory<C>, InitializingBean {
 
     private NetCommDispatcher dispatcher;
+    private MessageConverter messageConverter;
 
     private Executor taskExecutor;
-
-    private Integer prefetchCount;
 
     public void setDispatcher(NetCommDispatcher dispatcher) {
         this.dispatcher = dispatcher;
     }
 
-    public void setTaskExecutor(Executor taskExecutor) {
-        this.taskExecutor = taskExecutor;
+    public void setMessageConverter(MessageConverter messageConverter) {
+        this.messageConverter = messageConverter;
     }
 
-    public void setPrefetchCount(Integer prefetchCount) {
-        this.prefetchCount = prefetchCount;
+    public void setTaskExecutor(Executor taskExecutor) {
+        this.taskExecutor = taskExecutor;
     }
 
     public NetCommDispatcher getDispatcher() {
@@ -37,12 +38,15 @@ public abstract class AbstractNetCommListenerContainerFactory<C extends Abstract
     }
 
     @Override
-    public C createListenerContainer(short type, short func, MessageListener messageListener) {
+    public C createListenerContainer(short type, short func, Class<? extends MessageContent> parameterType, MessageListener messageListener) {
         C instance = createContainerInstance();
 
         instance.setType(type);
         instance.setFunc(func);
         instance.setMessageListener(messageListener);
+        instance.setParameterType(parameterType);
+        instance.setMessageConverter(messageConverter);
+        instance.setExecutor(taskExecutor);
         initializeContainer(instance);
 
         return instance;

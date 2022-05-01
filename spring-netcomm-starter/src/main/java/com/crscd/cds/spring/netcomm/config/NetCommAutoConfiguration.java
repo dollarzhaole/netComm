@@ -4,17 +4,20 @@ import com.crscd.cds.ctc.client.DoubleClient;
 import com.crscd.cds.ctc.client.NettyClient;
 import com.crscd.cds.ctc.filter.FilterRegister;
 import com.crscd.cds.ctc.protocol.NetAddress;
+import com.crscd.cds.spring.netcomm.converter.MessageConverter;
 import com.crscd.cds.spring.netcomm.core.NetCommDispatcher;
 import com.crscd.cds.spring.netcomm.core.NetCommListenerAnnotationBeanPostProcessor;
 import com.crscd.cds.spring.netcomm.core.SimpleNetCommListenerContainerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 /**
@@ -25,7 +28,7 @@ import java.util.stream.Collectors;
 @ConditionalOnClass({NettyClient.class, DoubleClient.class})
 @EnableConfigurationProperties(NetCommProperties.class)
 public class NetCommAutoConfiguration {
-    @Bean
+    @Bean(initMethod = "start", destroyMethod = "close")
     public DoubleClient client(NetCommProperties commProperties, NetCommDispatcher netCommDispatcher) {
         NetCommProperties.LocalAddress local = commProperties.getLocal();
         NetAddress localAddress = NetAddress.create(local.getBureauCode(), local.getUnitType().getValue(), local.getUnitId());
@@ -39,21 +42,28 @@ public class NetCommAutoConfiguration {
         NettyClient client1 = client1(commProperties, localAddress, register, netCommDispatcher);
         NettyClient client2 = client2(commProperties, localAddress, register);
 
-        DoubleClient client = new DoubleClient(client1, client2);
-        client.start();
-
-        return client;
+        return new DoubleClient(client1, client2);
     }
 
     @Bean
-    public NetCommTemplate netCommTemplate(DoubleClient client) {
-        return new NetCommTemplate(client);
+    public NetCommTemplate netCommTemplate(DoubleClient client, MessageConverter messageConverter) {
+        return new NetCommTemplate(client, messageConverter);
     }
 
     @Bean
-    public SimpleNetCommListenerContainerFactory netCommListenerContainerFactory(NetCommDispatcher netCommDispatcher) {
+    @ConditionalOnMissingBean(Executor.class)
+    public Executor executor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        return executor;
+    }
+
+    @Bean
+    public SimpleNetCommListenerContainerFactory netCommListenerContainerFactory(NetCommDispatcher netCommDispatcher, MessageConverter messageConverter, Executor executor) {
         SimpleNetCommListenerContainerFactory factory = new SimpleNetCommListenerContainerFactory();
         factory.setDispatcher(netCommDispatcher);
+        factory.setMessageConverter(messageConverter);
+        factory.setTaskExecutor(executor);
         return factory;
     }
 

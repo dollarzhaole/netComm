@@ -1,7 +1,7 @@
 package com.crscd.cds.spring.netcomm.core;
 
 
-import com.crscd.cds.ctc.protocol.MessageContent;
+import com.crscd.cds.spring.netcomm.message.MessageContent;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -12,5 +12,5 @@ import java.lang.reflect.InvocationTargetException;
  */
 @FunctionalInterface
 public interface MessageListener {
-    void onMessage(byte[] message) throws InvocationTargetException, IllegalAccessException;
+    void onMessage(Object content) throws InvocationTargetException, IllegalAccessException, InstantiationException;
 }

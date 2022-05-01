@@ -4,6 +4,7 @@ package com.crscd.cds.ctc.handler;
 import java.util.concurrent.TimeUnit;
 
 import com.crscd.cds.ctc.client.NettyClient;
+import com.crscd.cds.ctc.flow.FlowController;
 import com.crscd.cds.ctc.protocol.NegotiationRequestMessage;
 import io.netty.channel.*;
 import org.slf4j.Logger;
@@ -17,9 +18,11 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<Object> {
     private static final Logger LOGGER = LoggerFactory.getLogger(NettyClientHandler.class);
     private NettyClient nettyClient;
     private int attempts = 0;
+    private final FlowController flowController;
 
-    public NettyClientHandler(NettyClient nettyClient) {
+    public NettyClientHandler(NettyClient nettyClient, FlowController flowController) {
         this.nettyClient = nettyClient;
+        this.flowController = flowController;
     }
 
     @Override
@@ -45,6 +48,8 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<Object> {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         LOGGER.info(">>>>>>>>> offline: {}", ctx.channel());
+
+        flowController.onInactive();
 
         //使用过程中断线重连
         final EventLoop eventLoop = ctx.channel().eventLoop();

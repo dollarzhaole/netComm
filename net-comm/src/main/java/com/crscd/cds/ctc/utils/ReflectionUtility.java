@@ -10,7 +10,7 @@ import java.util.Stack;
  * @author zhaole
  * @date 2022-04-04
  */
-public class ReflectionUtils {
+public class ReflectionUtility {
     public static List<Field> getAllFieldsList(Class<?> cls) {
         Stack<Class<?>> classes = new Stack<Class<?>>();
         List<Field> allFields = new ArrayList<Field>();

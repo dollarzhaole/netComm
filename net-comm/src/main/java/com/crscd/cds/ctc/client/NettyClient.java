@@ -35,7 +35,7 @@ public class NettyClient {
     private Channel channel;
     private Bootstrap bootstrap = null;
 
-    private FlowController flowController = new FlowController(2, 5);
+    private final FlowController flowController = new FlowController(2, 5);
 
     public NettyClient(String host, int port, NetAddress localAddress, FilterRegister register, InboundDispatcher dispatcher) {
         this.host = host;
@@ -72,6 +72,7 @@ public class NettyClient {
                     }, 1L, TimeUnit.SECONDS);
                 } else {
                     channel = channelFuture.channel();
+                    flowController.setChannel(channel);
                 }
             }
         });
@@ -110,6 +111,17 @@ public class NettyClient {
 
         MessageHead msg = MessageHead.createApplicationData(data);
         getChannel().writeAndFlush(msg);
+    }
+
+    public void close() {
+        if (channel != null) {
+            channel.close().addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture channelFuture) {
+                    LOGGER.info("close manually to {} and result is {}", channel, channelFuture.isSuccess());
+                }
+            });
+        }
     }
 
     public Channel getChannel() {

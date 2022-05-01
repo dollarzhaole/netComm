@@ -1,5 +1,7 @@
 package com.crscd.cds.spring.netcomm.core;
 
+import com.crscd.cds.spring.netcomm.message.MessageContent;
+
 /**
  * 消息监听容器工厂
  * @param <C> 消息监听容器
@@ -8,6 +10,6 @@ package com.crscd.cds.spring.netcomm.core;
  */
 public interface NetCommListenerContainerFactory<C extends MessageListenerContainer> {
 
-    C createListenerContainer(short type, short func, MessageListener messageListener);
+    C createListenerContainer(short type, short func, Class<? extends MessageContent> parameterType, MessageListener messageListener);
 
 }

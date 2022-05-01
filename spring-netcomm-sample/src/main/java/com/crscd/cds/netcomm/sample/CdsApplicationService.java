@@ -3,6 +3,7 @@ package com.crscd.cds.netcomm.sample;
 import com.crscd.cds.spring.netcomm.annotation.EnableNetComm;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,6 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @EnableNetComm
+@EnableScheduling
 public class CdsApplicationService {
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(CdsApplicationService.class);
