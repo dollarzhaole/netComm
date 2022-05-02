@@ -1,5 +1,6 @@
 package com.crscd.cds.ctc.codec;
 
+import com.crscd.cds.ctc.protocol.DoubleNetPackage;
 import com.crscd.cds.ctc.protocol.MessageHead;
 import com.crscd.cds.ctc.protocol.RegisterMessage;
 import io.netty.buffer.ByteBuf;
@@ -12,11 +13,11 @@ import org.slf4j.LoggerFactory;
  * @author zhaole
  * @date 2022-04-19
  */
-public class MessageEncoder extends MessageToByteEncoder<MessageHead> {
+public class MessageEncoder extends MessageToByteEncoder<DoubleNetPackage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageEncoder.class);
     @Override
-    protected void encode(ChannelHandlerContext ctx, MessageHead msg, ByteBuf out) throws Exception {
-        LOGGER.debug("RegisterMessageEncoder: {}", msg);
+    protected void encode(ChannelHandlerContext ctx, DoubleNetPackage msg, ByteBuf out) throws Exception {
+        LOGGER.debug("MessageEncoder: {}", msg);
 
         ByteBuf buf = msg.encode();
         out.writeBytes(buf.copy());

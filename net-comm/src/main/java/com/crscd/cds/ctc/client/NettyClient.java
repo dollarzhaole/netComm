@@ -5,11 +5,15 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import com.crscd.cds.ctc.filter.FilterRegister;
-import com.crscd.cds.ctc.flow.FlowController;
-import com.crscd.cds.ctc.flow.InboundDispatcher;
+import com.crscd.cds.ctc.controller.DoubleNetController;
+import com.crscd.cds.ctc.controller.DoubleNetSequence;
+import com.crscd.cds.ctc.enums.ClientFlagEnum;
+import com.crscd.cds.ctc.forward.FilterRegister;
+import com.crscd.cds.ctc.controller.FlowController;
+import com.crscd.cds.ctc.controller.InboundDispatcher;
 import com.crscd.cds.ctc.handler.*;
 import com.crscd.cds.ctc.protocol.ApplicationData;
+import com.crscd.cds.ctc.protocol.DoubleNetPackage;
 import com.crscd.cds.ctc.protocol.MessageHead;
 import com.crscd.cds.ctc.protocol.NetAddress;
 import io.netty.bootstrap.Bootstrap;
@@ -30,34 +34,61 @@ import org.slf4j.LoggerFactory;
  */
 public class NettyClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(NettyClient.class);
-    private String host;
-    private int port;
+    private final String host;
+    private final int port;
+    private final int localPort;
+    private final NetAddress localAddress;
+    private final FilterRegister register;
     private final InboundDispatcher inboundDispatcher;
+    private DoubleNetController doubleNetController;
+    private final ClientFlagEnum clientFlag;
     private Channel channel;
     private Bootstrap bootstrap = null;
 
     private final FlowController flowController = new FlowController(2, 5);
 
-    public NettyClient(String host, int port, NetAddress localAddress, FilterRegister register, InboundDispatcher dispatcher) {
+    public NettyClient(String host, int port, Integer localPort, NetAddress localAddress, FilterRegister register, InboundDispatcher dispatcher, ClientFlagEnum clientFlag) {
         this.host = host;
         this.port = port;
-        inboundDispatcher = dispatcher;
-
-        init(localAddress, register);
+        this.localAddress = localAddress;
+        this.register = register;
+        this.inboundDispatcher = dispatcher;
+        this.clientFlag = clientFlag;
+        this.localPort = localPort == null ? 0 : localPort;
     }
 
-    private void init(NetAddress localAddress, FilterRegister register) {
+    public NettyClient(String host, int port, NetAddress localAddress, FilterRegister register, InboundDispatcher dispatcher, ClientFlagEnum clientFlag) {
+        this.host = host;
+        this.port = port;
+        this.localAddress = localAddress;
+        this.register = register;
+        this.inboundDispatcher = dispatcher;
+        this.clientFlag = clientFlag;
+        this.localPort = 0;
+    }
+
+    public void setDoubleNetController(DoubleNetController doubleNetController) {
+        if (doubleNetController == null) {
+            doubleNetController = new DoubleNetController();
+        }
+
+        this.doubleNetController = doubleNetController;
+    }
+
+    public void init() {
         bootstrap = new Bootstrap();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         bootstrap.group(workerGroup).option(ChannelOption.SO_KEEPALIVE, true)
                 .channel(NioSocketChannel.class)
-                .handler(new NetCommChannelInitializer(this, flowController, localAddress, register, inboundDispatcher));
+                .handler(new NetCommChannelInitializer(this, flowController, localAddress, register, inboundDispatcher, clientFlag, doubleNetController));
 
         MessageHead.setSrc(localAddress);
     }
 
     public void start() {
-        bootstrap.localAddress(new InetSocketAddress( 9999));
+        if (localPort != 0) {
+            bootstrap.localAddress(new InetSocketAddress( localPort));
+        }
         ChannelFuture f = bootstrap.connect(host, port);
         //断线重连
         f.addListener(new ChannelFutureListener() {
@@ -80,7 +111,7 @@ public class NettyClient {
         });
     }
 
-    public void sendData(final byte[] data, final short type, final short func) {
+    public void sendData(final byte[] data, final short type, final short func, DoubleNetSequence dnSeq) {
         if (getChannel() == null) {
             LOGGER.debug("not connected, send fail {}", channel);
             return;
@@ -92,7 +123,8 @@ public class NettyClient {
         }
 
         MessageHead msg = MessageHead.createApplicationData(type, func, data);
-        getChannel().writeAndFlush(msg).addListener(new ChannelFutureListener() {
+        DoubleNetPackage pkt = DoubleNetPackage.create(dnSeq, msg);
+        getChannel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                 LOGGER.debug("send data {}-{}: {} {}", type, func, data, channelFuture.isSuccess());
@@ -100,7 +132,7 @@ public class NettyClient {
         });
     }
 
-    public void sendData(byte[] data) {
+    public void sendData(byte[] data, DoubleNetSequence dnSeq) {
         if (getChannel() == null) {
             LOGGER.debug("not connected, send failed {}", channel);
             return;
@@ -112,7 +144,8 @@ public class NettyClient {
         }
 
         MessageHead msg = MessageHead.createApplicationData(data);
-        getChannel().writeAndFlush(msg);
+        DoubleNetPackage pkt = DoubleNetPackage.create(dnSeq, msg);
+        getChannel().writeAndFlush(pkt);
     }
 
     public void close() {
@@ -151,7 +184,9 @@ public class NettyClient {
         FilterRegister.ClientAddress address = FilterRegister.ClientAddress.create(0x01, 0x02, 0x01);
         FilterRegister register = FilterRegister.create(funcs, address);
 
-        NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress, register, null);
+        DoubleNetController doubleNetController = new DoubleNetController();
+
+        NettyClient nettyClient = new NettyClient("10.2.54.251", 8001, localAddress, register, null, ClientFlagEnum.NET1);
         nettyClient.start();
 
         byte[] bytes = new byte[10];

@@ -1,6 +1,6 @@
 package com.crscd.cds.ctc.handler;
 
-import com.crscd.cds.ctc.flow.FlowController;
+import com.crscd.cds.ctc.controller.FlowController;
 import com.crscd.cds.ctc.protocol.PackageDefine;
 import com.crscd.cds.ctc.utils.HexUtils;
 import io.netty.buffer.ByteBuf;
@@ -9,19 +9,16 @@ import io.netty.channel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
+ * 在此Handler中包裹最外层的的包头
  * @author zhaole
  * @date 2022-04-14
  */
-public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DoubleNetSeqOutBoundHandler.class);
+public class PackageHeadOutBoundHandler extends ChannelOutboundHandlerAdapter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PackageHeadOutBoundHandler.class);
     private final FlowController flowController;
-    private final AtomicLong doubleNetSeq = new AtomicLong(1);
 
-
-    public DoubleNetSeqOutBoundHandler(FlowController flowController) {
+    public PackageHeadOutBoundHandler(FlowController flowController) {
         this.flowController = flowController;
     }
 
@@ -33,8 +30,6 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
             super.write(ctx, msg, promise);
             return;
         }
-
-        LOGGER.debug("msg is ByteBuf");
 
         if (waitIfNeedAck()) {
             waitForAck(ctx, (ByteBuf) msg, promise);
@@ -70,11 +65,6 @@ public class DoubleNetSeqOutBoundHandler extends ChannelOutboundHandlerAdapter {
         out.writeIntLE(msg.readableBytes() + 8);
         out.writeByte(PackageDefine.DATA);
         out.writeIntLE((int) packageSequence);
-
-        // 设置双网层
-        long seq = doubleNetSeq.getAndIncrement();
-        out.writeIntLE((int) seq);
-        out.writeIntLE((int) (seq >> (8 * 4)));
 
         out.writeBytes(msg);
 

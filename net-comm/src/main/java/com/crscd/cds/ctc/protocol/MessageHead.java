@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.protocol;
 
-import com.crscd.cds.ctc.filter.FilterRegister;
+import com.crscd.cds.ctc.controller.DoubleNetSequence;
+import com.crscd.cds.ctc.forward.FilterRegister;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 

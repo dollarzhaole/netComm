@@ -86,7 +86,7 @@ public class NetCommProperties {
     public static class Server {
         private String host;
         private Integer port;
-        private String localHost;
+        private Integer localPort;
 
         public String getHost() {
             return host;
@@ -104,12 +104,12 @@ public class NetCommProperties {
             this.port = port;
         }
 
-        public String getLocalHost() {
-            return localHost;
+        public Integer getLocalPort() {
+            return localPort;
         }
 
-        public void setLocalHost(String localHost) {
-            this.localHost = localHost;
+        public void setLocalPort(Integer localPort) {
+            this.localPort = localPort;
         }
     }
 

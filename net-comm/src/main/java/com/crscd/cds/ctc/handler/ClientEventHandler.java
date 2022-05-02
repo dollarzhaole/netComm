@@ -4,7 +4,9 @@ package com.crscd.cds.ctc.handler;
 import java.util.concurrent.TimeUnit;
 
 import com.crscd.cds.ctc.client.NettyClient;
-import com.crscd.cds.ctc.flow.FlowController;
+import com.crscd.cds.ctc.controller.DoubleNetController;
+import com.crscd.cds.ctc.controller.FlowController;
+import com.crscd.cds.ctc.enums.ClientFlagEnum;
 import com.crscd.cds.ctc.protocol.NegotiationRequestMessage;
 import io.netty.channel.*;
 import org.slf4j.Logger;
@@ -14,15 +16,19 @@ import org.slf4j.LoggerFactory;
  * @author zhaole
  * @date 2022-03-26
  */
-public class NettyClientHandler extends SimpleChannelInboundHandler<Object> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(NettyClientHandler.class);
-    private NettyClient nettyClient;
+public class ClientEventHandler extends SimpleChannelInboundHandler<Object> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientEventHandler.class);
+    private final NettyClient nettyClient;
     private int attempts = 0;
     private final FlowController flowController;
+    private final DoubleNetController doubleNetController;
+    private final ClientFlagEnum clientFlag;
 
-    public NettyClientHandler(NettyClient nettyClient, FlowController flowController) {
+    public ClientEventHandler(NettyClient nettyClient, FlowController flowController, DoubleNetController doubleNetController, ClientFlagEnum clientFlag) {
         this.nettyClient = nettyClient;
         this.flowController = flowController;
+        this.doubleNetController = doubleNetController;
+        this.clientFlag = clientFlag;
     }
 
     @Override
@@ -50,6 +56,8 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<Object> {
         LOGGER.info(">>>>>>>>> offline: {}", ctx.channel());
 
         flowController.onInactive();
+        doubleNetController.onInactive(clientFlag);
+
 
         //使用过程中断线重连
         final EventLoop eventLoop = ctx.channel().eventLoop();

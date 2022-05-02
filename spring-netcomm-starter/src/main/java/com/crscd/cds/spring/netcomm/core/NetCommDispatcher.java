@@ -1,6 +1,6 @@
 package com.crscd.cds.spring.netcomm.core;
 
-import com.crscd.cds.ctc.flow.InboundDispatcher;
+import com.crscd.cds.ctc.controller.InboundDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

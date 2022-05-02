@@ -2,7 +2,8 @@ package com.crscd.cds.spring.netcomm.config;
 
 import com.crscd.cds.ctc.client.DoubleClient;
 import com.crscd.cds.ctc.client.NettyClient;
-import com.crscd.cds.ctc.filter.FilterRegister;
+import com.crscd.cds.ctc.enums.ClientFlagEnum;
+import com.crscd.cds.ctc.forward.FilterRegister;
 import com.crscd.cds.ctc.protocol.NetAddress;
 import com.crscd.cds.spring.netcomm.converter.MessageConverter;
 import com.crscd.cds.spring.netcomm.core.NetCommDispatcher;
@@ -40,7 +41,7 @@ public class NetCommAutoConfiguration {
         FilterRegister register = FilterRegister.create(typeFuncList, FilterRegister.ClientAddress.create(localAddress));
 
         NettyClient client1 = client1(commProperties, localAddress, register, netCommDispatcher);
-        NettyClient client2 = client2(commProperties, localAddress, register);
+        NettyClient client2 = client2(commProperties, localAddress, register, netCommDispatcher);
 
         return new DoubleClient(client1, client2);
     }
@@ -69,18 +70,17 @@ public class NetCommAutoConfiguration {
 
     private NettyClient client1(NetCommProperties properties, NetAddress localAddress, FilterRegister register, NetCommDispatcher dispatcher) {
         NetCommProperties.Server server1 = properties.getServer1();
-        return new NettyClient(server1.getHost(), server1.getPort(), localAddress, register, dispatcher);
+        return new NettyClient(server1.getHost(), server1.getPort(), server1.getLocalPort(), localAddress, register, dispatcher, ClientFlagEnum.NET1);
     }
 
     @Nullable
-    private NettyClient client2(NetCommProperties properties, NetAddress localAddress, FilterRegister register) {
-        return null;
-//        NetCommProperties.Server server = properties.getServer2();
-//        if (server == null) {
-//            return null;
-//        }
-//
-//        return new NettyClient(server.getHost(), server.getPort(), localAddress, register);
+    private NettyClient client2(NetCommProperties properties, NetAddress localAddress, FilterRegister register, NetCommDispatcher dispatcher) {
+        NetCommProperties.Server server = properties.getServer2();
+        if (server == null) {
+            return null;
+        }
+
+        return new NettyClient(server.getHost(), server.getPort(), server.getLocalPort(), localAddress, register, dispatcher, ClientFlagEnum.NET2);
     }
 
     @Bean

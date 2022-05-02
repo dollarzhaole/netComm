@@ -1,6 +1,5 @@
-package com.crscd.cds.ctc.flow;
+package com.crscd.cds.ctc.controller;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -4,9 +4,11 @@ import com.crscd.cds.ctc.client.NettyClient;
 import com.crscd.cds.ctc.codec.MessageDecoder;
 import com.crscd.cds.ctc.codec.HeaderEncoder;
 import com.crscd.cds.ctc.codec.MessageEncoder;
-import com.crscd.cds.ctc.filter.FilterRegister;
-import com.crscd.cds.ctc.flow.FlowController;
-import com.crscd.cds.ctc.flow.InboundDispatcher;
+import com.crscd.cds.ctc.controller.DoubleNetController;
+import com.crscd.cds.ctc.enums.ClientFlagEnum;
+import com.crscd.cds.ctc.forward.FilterRegister;
+import com.crscd.cds.ctc.controller.FlowController;
+import com.crscd.cds.ctc.controller.InboundDispatcher;
 import com.crscd.cds.ctc.protocol.NetAddress;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -24,8 +26,10 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
     private final NettyClient client;
     private final FlowController flowController;
     private final NetAddress localAddress;
-    private FilterRegister register;
+    private final FilterRegister register;
     private final InboundDispatcher inboundDispatcher;
+    private final ClientFlagEnum netFlag;
+    private final DoubleNetController doubleNetController;
 
     private static final int MAX_PACKAGE_LENGTH = Integer.MAX_VALUE;
     private static final int LENGTH_FIELD_OFFSET = 4;
@@ -33,12 +37,14 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
     private static final int LENGTH_ADJUSTMENT = 5;
     private static final int INITIAL_BYTES_TO_STRIP = 0;
 
-    public NetCommChannelInitializer(NettyClient client, FlowController flowController, NetAddress localAddress, FilterRegister register, InboundDispatcher inboundDispatcher) {
+    public NetCommChannelInitializer(NettyClient client, FlowController flowController, NetAddress localAddress, FilterRegister register, InboundDispatcher inboundDispatcher, ClientFlagEnum netFlag, DoubleNetController doubleNetController) {
         this.client = client;
         this.flowController = flowController;
         this.localAddress = localAddress;
         this.register = register;
         this.inboundDispatcher = inboundDispatcher;
+        this.netFlag = netFlag;
+        this.doubleNetController = doubleNetController;
     }
 
     @Override
@@ -47,13 +53,13 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast("idleState", new IdleStateHandler(7, 2, 2));
         pipeline.addLast("hb", new HeartBeatHandler());
         pipeline.addLast("LengthFieldBasedFrameDecoder", new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, MAX_PACKAGE_LENGTH, LENGTH_FIELD_OFFSET, LENGTH_FIELD_LENGTH, LENGTH_ADJUSTMENT, INITIAL_BYTES_TO_STRIP, true));
-        pipeline.addLast("PackageChannelInboundHandler", new PackageChannelInboundHandler(flowController, register));
-        pipeline.addLast("DoubleNetSeqInboundHandler", new DoubleNetSeqInboundHandler());
+        pipeline.addLast("PackageChannelInboundHandler", new PackageChannelInboundHandler(flowController, register, doubleNetController));
+        pipeline.addLast("DoubleNetSeqInboundHandler", new DoubleNetSeqInboundHandler(netFlag, doubleNetController));
         pipeline.addLast("ForwardInboundHandler", new ForwardInboundHandler());
         pipeline.addLast("decoder", new MessageDecoder(inboundDispatcher));
         pipeline.addLast("encoder", new HeaderEncoder());
-        pipeline.addLast("handler", new NettyClientHandler(client, flowController));
-        pipeline.addLast("DoubleNetSeqOutBoundHandler", new DoubleNetSeqOutBoundHandler(flowController));
+        pipeline.addLast("handler", new ClientEventHandler(client, flowController, doubleNetController, netFlag));
+        pipeline.addLast("DoubleNetSeqOutBoundHandler", new PackageHeadOutBoundHandler(flowController));
         pipeline.addLast("RegisterMessageEncoder", new MessageEncoder());
         pipeline.addLast("ExceptionHandler", new ExceptionHandler());
     }

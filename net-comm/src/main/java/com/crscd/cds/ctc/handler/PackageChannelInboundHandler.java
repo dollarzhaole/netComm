@@ -1,7 +1,10 @@
 package com.crscd.cds.ctc.handler;
 
-import com.crscd.cds.ctc.filter.FilterRegister;
-import com.crscd.cds.ctc.flow.FlowController;
+import com.crscd.cds.ctc.controller.DoubleNetController;
+import com.crscd.cds.ctc.controller.DoubleNetSequence;
+import com.crscd.cds.ctc.forward.FilterRegister;
+import com.crscd.cds.ctc.controller.FlowController;
+import com.crscd.cds.ctc.protocol.DoubleNetPackage;
 import com.crscd.cds.ctc.protocol.MessageHead;
 import com.crscd.cds.ctc.protocol.NegotiationResponseMessage;
 import com.crscd.cds.ctc.protocol.PackageDefine;
@@ -14,8 +17,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-
 /**
  * @author zhaole
  * @date 2022-04-12
@@ -23,7 +24,8 @@ import java.util.ArrayList;
 public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(PackageChannelInboundHandler.class);
     private final FlowController flowController;
-    private FilterRegister register;
+    private final FilterRegister register;
+    private final DoubleNetController doubleNetController;
 
     private static final ByteBuf ACK_BUFFER = Unpooled.buffer(13);
     static {
@@ -32,9 +34,10 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         ACK_BUFFER.writeByte(PackageDefine.ACK_CONFIRM);
     }
 
-    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register) {
+    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register, DoubleNetController doubleNetController) {
         this.flowController = flowController;
         this.register = register;
+        this.doubleNetController = doubleNetController;
     }
 
     @Override
@@ -42,12 +45,12 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         LOGGER.debug("rec msg: {}", msg);
 
         ByteBuf byteBuf = (ByteBuf) msg;
-        if (channelRead0(ctx, byteBuf) && byteBuf.isReadable()) {
+        if (doChannelRead(ctx, byteBuf) && byteBuf.isReadable()) {
             super.channelRead(ctx, msg);
         }
     }
 
-    protected boolean channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
+    private boolean doChannelRead(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
         byteBuf.readUnsignedIntLE();
         byteBuf.readUnsignedIntLE();
         short type = byteBuf.readUnsignedByte();
@@ -106,8 +109,15 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     private void sendRegisterRequest(final ChannelHandlerContext channelHandlerContext) throws InterruptedException {
         MessageHead msg = MessageHead.createRegisterMessage(register);
 
-        channelHandlerContext.channel().writeAndFlush(msg).sync();
-        LOGGER.info("send register xml to {} successfully", channelHandlerContext.channel());
+        DoubleNetSequence sequence = doubleNetController.getSendSequence();
+        DoubleNetPackage pkt = DoubleNetPackage.create(sequence, msg);
+
+        channelHandlerContext.channel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                LOGGER.info("send register xml to {}: {}", channelHandlerContext.channel(), channelFuture.isSuccess());
+            }
+        });
     }
 
     private void doNegotiationResponse(ChannelHandlerContext context, ByteBuf byteBuf) {
