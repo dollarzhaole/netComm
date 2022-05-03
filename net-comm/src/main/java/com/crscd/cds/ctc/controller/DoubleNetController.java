@@ -22,10 +22,9 @@ public class DoubleNetController {
     private final DoubleNetSequence lastReceiveSequence1 = new DoubleNetSequence(0, 0);
     private final DoubleNetSequence lastReceiveSequence2 = new DoubleNetSequence(0, 0);
     private final DoubleNetSequence lastReceiveSequence = new DoubleNetSequence(0, 0);
-    private final DoubleNetSequence sendSequence = new DoubleNetSequence(1, 0);
+    private final DoubleNetSequence sendSequence = new DoubleNetSequence(2, 0);
 
     public synchronized void onInactive(ClientFlagEnum clientFlag) {
-        sendSequence.init();
         if (clientFlag.equals(ClientFlagEnum.NET1)) {
             lastReceiveSequence1.init();
         } else {

@@ -22,8 +22,9 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(PackageChannelInboundHandler.class);
     private final FlowController flowController;
     private final FilterRegister register;
-    private final DoubleNetController doubleNetController;
     private final NetAddress local;
+    private final DoubleNetController doubleNetController;
+    private boolean sentRegister = false;
 
     private static final ByteBuf ACK_BUFFER = Unpooled.buffer(13);
     static {
@@ -32,11 +33,11 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         ACK_BUFFER.writeByte(PackageDefine.ACK_CONFIRM);
     }
 
-    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register, DoubleNetController doubleNetController, NetAddress local) {
+    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register, NetAddress local, DoubleNetController doubleNetController) {
         this.flowController = flowController;
         this.register = register;
-        this.doubleNetController = doubleNetController;
         this.local = local;
+        this.doubleNetController = doubleNetController;
     }
 
     @Override
@@ -63,6 +64,7 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
             doHeartBeat(channelHandlerContext);
             return false;
         } else if (type == PackageDefine.DATA) {
+            LOGGER.debug("rec app data double net ({},{})", byteBuf.getUnsignedIntLE(13), byteBuf.getUnsignedInt(17));
             checkAndSendAckIfNecessary(channelHandlerContext, sequence);
         } else if (type == PackageDefine.ACK_CONFIRM) {
             doAckConfirm(channelHandlerContext, sequence);
@@ -106,9 +108,15 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendRegisterRequest(final ChannelHandlerContext channelHandlerContext) throws InterruptedException {
+        if (sentRegister) {
+            return;
+        }
+
+        sentRegister = true;
+
         MessageHead msg = MessageHead.createRegisterMessage(register, local);
 
-        DoubleNetSequence sequence = doubleNetController.getSendSequence();
+        DoubleNetSequence sequence = DoubleNetSequence.createRegisterDoubleNetSequence();
         DoubleNetPackage pkt = DoubleNetPackage.create(sequence, msg);
 
         channelHandlerContext.channel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
