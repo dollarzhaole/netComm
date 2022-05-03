@@ -17,7 +17,7 @@ public class MessageEncoder extends MessageToByteEncoder<DoubleNetPackage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageEncoder.class);
     @Override
     protected void encode(ChannelHandlerContext ctx, DoubleNetPackage msg, ByteBuf out) throws Exception {
-        LOGGER.debug("MessageEncoder: {}", msg);
+        LOGGER.debug("send message with double net: {}", msg);
 
         ByteBuf buf = msg.encode();
         out.writeBytes(buf.copy());

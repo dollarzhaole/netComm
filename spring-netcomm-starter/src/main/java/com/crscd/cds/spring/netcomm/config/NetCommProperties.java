@@ -117,6 +117,7 @@ public class NetCommProperties {
         private Short bureauCode;
         private UnitTypeEnum unitType;
         private Integer unitId;
+        private Integer clientId;
 
         public enum UnitTypeEnum {
             CENTER((short) 0x01),
@@ -132,6 +133,14 @@ public class NetCommProperties {
             UnitTypeEnum(short value) {
                 this.value = value;
             }
+        }
+
+        public Integer getClientId() {
+            return clientId;
+        }
+
+        public void setClientId(Integer clientId) {
+            this.clientId = clientId;
         }
 
         public Short getBureauCode() {

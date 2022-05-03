@@ -1,6 +1,5 @@
 package com.crscd.cds.ctc.protocol;
 
-import com.crscd.cds.ctc.controller.DoubleNetSequence;
 import com.crscd.cds.ctc.forward.FilterRegister;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -17,16 +16,16 @@ public class MessageHead {
     private short forwardType;
     private short type;
     private short func;
-    private static NetAddress src;
+    private NetAddress src;
     private List<NetAddress> dest;
     private List<ConditionalProperty> properties;
     private byte[] data;
 
-    public static MessageHead createApplicationData(short type, short func, byte[] data) {
-        return create(type, func, data, DataType.FORWARD);
+    public static MessageHead createApplicationData(short type, short func, byte[] data, NetAddress src) {
+        return create(type, func, data, DataType.FORWARD, src);
     }
 
-    public static MessageHead createApplicationData(byte[] data) {
+    public static MessageHead createApplicationData(byte[] data, NetAddress src) {
         if (data.length < 2) {
             return null;
         }
@@ -34,17 +33,17 @@ public class MessageHead {
         short type = (short) data[0];
         short func = (short) data[1];
 
-        return createApplicationData(type, func, data);
+        return createApplicationData(type, func, data, src);
     }
 
-    public static MessageHead createRegisterMessage(FilterRegister register) {
+    public static MessageHead createRegisterMessage(FilterRegister register, NetAddress src) {
         RegisterMessage messageHead = RegisterMessage.create(register);
         byte[] data = messageHead.encode();
 
-        return create(data);
+        return create(data, src);
     }
 
-    private static MessageHead create(byte[] data) {
+    private static MessageHead create(byte[] data, NetAddress src) {
         if (data.length < 2) {
             return null;
         }
@@ -52,10 +51,10 @@ public class MessageHead {
         short type = (short) data[0];
         short func = (short) data[1];
 
-        return create(type, func, data, DataType.REGISTER);
+        return create(type, func, data, DataType.REGISTER, src);
     }
 
-    private static MessageHead create(short type, short func, byte[] data, short dataType) {
+    private static MessageHead create(short type, short func, byte[] data, short dataType, NetAddress src) {
         MessageHead message = new MessageHead();
         message.setForwardType(DataType.MSGPACK_FORWARD_TYPE_BY_REG_LOCAL_DISPATCH);
         message.setData(data);
@@ -65,6 +64,7 @@ public class MessageHead {
         message.setProperties(null);
         message.setDataType(dataType);
         message.setProtocolType(DataType.PROTOCOL_TYPE_418);
+        message.setSrc(src);
 
         return message;
     }
@@ -93,12 +93,12 @@ public class MessageHead {
         this.func = func;
     }
 
-    public static NetAddress getSrc() {
+    public NetAddress getSrc() {
         return src;
     }
 
-    public static void setSrc(NetAddress src) {
-        MessageHead.src = src;
+    public void setSrc(NetAddress src) {
+        this.src = src;
     }
 
     public List<NetAddress> getDest() {

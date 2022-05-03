@@ -38,11 +38,11 @@ public class PackageHeadOutBoundHandler extends ChannelOutboundHandlerAdapter {
 
         ByteBuf out = wrap((ByteBuf) msg);
 
-        super.write(ctx, out, promise);
-
         byte[] bytes = new byte[out.readableBytes()];
         out.getBytes(0, bytes);
-        LOGGER.trace("send data: {}", HexUtils.bytesToHex(bytes, 20));
+        LOGGER.debug("send data: {}", HexUtils.bytesToHex(bytes, 20));
+
+        super.write(ctx, out, promise);
     }
 
     private void waitForAck(ChannelHandlerContext ctx, ByteBuf msg, ChannelPromise promise) {
@@ -54,7 +54,7 @@ public class PackageHeadOutBoundHandler extends ChannelOutboundHandlerAdapter {
         return flowController.waitAckIfNecessary();
     }
 
-    private ByteBuf wrap(ByteBuf msg) throws Exception {
+    private ByteBuf wrap(ByteBuf msg) {
         flowController.updateSend();
         long packageSequence = flowController.getAndIncrementSendSequence();
 
@@ -62,7 +62,7 @@ public class PackageHeadOutBoundHandler extends ChannelOutboundHandlerAdapter {
 
         // 设置包头
         out.writeIntLE(PackageDefine.CURRENT_VERSION);
-        out.writeIntLE(msg.readableBytes() + 8);
+        out.writeIntLE(msg.readableBytes());
         out.writeByte(PackageDefine.DATA);
         out.writeIntLE((int) packageSequence);
 

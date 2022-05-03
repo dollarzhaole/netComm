@@ -4,10 +4,7 @@ import com.crscd.cds.ctc.controller.DoubleNetController;
 import com.crscd.cds.ctc.controller.DoubleNetSequence;
 import com.crscd.cds.ctc.forward.FilterRegister;
 import com.crscd.cds.ctc.controller.FlowController;
-import com.crscd.cds.ctc.protocol.DoubleNetPackage;
-import com.crscd.cds.ctc.protocol.MessageHead;
-import com.crscd.cds.ctc.protocol.NegotiationResponseMessage;
-import com.crscd.cds.ctc.protocol.PackageDefine;
+import com.crscd.cds.ctc.protocol.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -26,6 +23,7 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     private final FlowController flowController;
     private final FilterRegister register;
     private final DoubleNetController doubleNetController;
+    private final NetAddress local;
 
     private static final ByteBuf ACK_BUFFER = Unpooled.buffer(13);
     static {
@@ -34,10 +32,11 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         ACK_BUFFER.writeByte(PackageDefine.ACK_CONFIRM);
     }
 
-    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register, DoubleNetController doubleNetController) {
+    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register, DoubleNetController doubleNetController, NetAddress local) {
         this.flowController = flowController;
         this.register = register;
         this.doubleNetController = doubleNetController;
+        this.local = local;
     }
 
     @Override
@@ -88,7 +87,7 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         channelHandlerContext.writeAndFlush(buf).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                LOGGER.debug("send ack seq={} to {}", sequence, channelHandlerContext);
+                LOGGER.info("send ack seq={} to {}", sequence, channelHandlerContext);
             }
         });
     }
@@ -107,7 +106,7 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendRegisterRequest(final ChannelHandlerContext channelHandlerContext) throws InterruptedException {
-        MessageHead msg = MessageHead.createRegisterMessage(register);
+        MessageHead msg = MessageHead.createRegisterMessage(register, local);
 
         DoubleNetSequence sequence = doubleNetController.getSendSequence();
         DoubleNetPackage pkt = DoubleNetPackage.create(sequence, msg);

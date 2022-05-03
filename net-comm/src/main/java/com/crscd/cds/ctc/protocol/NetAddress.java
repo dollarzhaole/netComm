@@ -16,15 +16,18 @@ public class NetAddress {
     private short devType = 0xFF;
     private int devId = 0xFF;
     private short procType = 0xFF;
-    private int procId = 0xFF;
+    private int procId = DEFAULT_CLIENT_ID;
     private short userType = 0xFF;
     private long userId = 0xFF;
 
-    public static NetAddress create(short bureauCode, short unitType, int unitId) {
+    public static final int DEFAULT_CLIENT_ID = 129;
+
+    public static NetAddress create(short bureauCode, short unitType, int unitId, Integer clientId) {
         NetAddress address = new NetAddress();
         address.setBureauCode(bureauCode);
         address.setUnitType(unitType);
         address.setUnitId(unitId);
+        address.setProcId(clientId);
 
         return address;
     }

@@ -32,7 +32,7 @@ public class NetCommAutoConfiguration {
     @Bean(initMethod = "start", destroyMethod = "close")
     public DoubleClient client(NetCommProperties commProperties, NetCommDispatcher netCommDispatcher) {
         NetCommProperties.LocalAddress local = commProperties.getLocal();
-        NetAddress localAddress = NetAddress.create(local.getBureauCode(), local.getUnitType().getValue(), local.getUnitId());
+        NetAddress localAddress = NetAddress.create(local.getBureauCode(), local.getUnitType().getValue(), local.getUnitId(), local.getClientId());
 
         List<FilterRegister.TypeFunc> typeFuncList = commProperties.getInCondition().getRec().stream()
                 .map(tf -> FilterRegister.TypeFunc.create(tf.getType(), tf.getFunc()))

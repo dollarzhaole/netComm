@@ -40,8 +40,8 @@ public class NettyClient {
     private final NetAddress localAddress;
     private final FilterRegister register;
     private final InboundDispatcher inboundDispatcher;
-    private DoubleNetController doubleNetController;
     private final ClientFlagEnum clientFlag;
+    private DoubleNetController doubleNetController;
     private Channel channel;
     private Bootstrap bootstrap = null;
 
@@ -81,8 +81,6 @@ public class NettyClient {
         bootstrap.group(workerGroup).option(ChannelOption.SO_KEEPALIVE, true)
                 .channel(NioSocketChannel.class)
                 .handler(new NetCommChannelInitializer(this, flowController, localAddress, register, inboundDispatcher, clientFlag, doubleNetController));
-
-        MessageHead.setSrc(localAddress);
     }
 
     public void start() {
@@ -122,7 +120,7 @@ public class NettyClient {
             return;
         }
 
-        MessageHead msg = MessageHead.createApplicationData(type, func, data);
+        MessageHead msg = MessageHead.createApplicationData(type, func, data, localAddress);
         DoubleNetPackage pkt = DoubleNetPackage.create(dnSeq, msg);
         getChannel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
             @Override
@@ -143,9 +141,14 @@ public class NettyClient {
             return;
         }
 
-        MessageHead msg = MessageHead.createApplicationData(data);
-        DoubleNetPackage pkt = DoubleNetPackage.create(dnSeq, msg);
-        getChannel().writeAndFlush(pkt);
+        MessageHead msg = MessageHead.createApplicationData(data, localAddress);
+        final DoubleNetPackage pkt = DoubleNetPackage.create(dnSeq, msg);
+        getChannel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                LOGGER.debug("sendData {}: {}", pkt, channelFuture.isSuccess());
+            }
+        });
     }
 
     public void close() {

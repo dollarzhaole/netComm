@@ -8,6 +8,7 @@ import com.crscd.cds.ctc.controller.DoubleNetController;
 import com.crscd.cds.ctc.controller.FlowController;
 import com.crscd.cds.ctc.enums.ClientFlagEnum;
 import com.crscd.cds.ctc.protocol.NegotiationRequestMessage;
+import com.crscd.cds.ctc.protocol.NetAddress;
 import io.netty.channel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +24,14 @@ public class ClientEventHandler extends SimpleChannelInboundHandler<Object> {
     private final FlowController flowController;
     private final DoubleNetController doubleNetController;
     private final ClientFlagEnum clientFlag;
+    private final NetAddress localAddress;
 
-    public ClientEventHandler(NettyClient nettyClient, FlowController flowController, DoubleNetController doubleNetController, ClientFlagEnum clientFlag) {
+    public ClientEventHandler(NettyClient nettyClient, FlowController flowController, DoubleNetController doubleNetController, ClientFlagEnum clientFlag, NetAddress localAddress) {
         this.nettyClient = nettyClient;
         this.flowController = flowController;
         this.doubleNetController = doubleNetController;
         this.clientFlag = clientFlag;
+        this.localAddress = localAddress;
     }
 
     @Override
@@ -38,15 +41,17 @@ public class ClientEventHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void channelActive(ChannelHandlerContext channelHandlerContext) throws Exception {
-        LOGGER.debug(">>>>>>>>> connected: {}", channelHandlerContext.channel());
+        LOGGER.info(">>>>>>>>> connected: {}", channelHandlerContext.channel());
 
-        NegotiationRequestMessage negotiationRequestPackage = new NegotiationRequestMessage();
+        final NegotiationRequestMessage negotiationRequestPackage = new NegotiationRequestMessage();
+        negotiationRequestPackage.setClientId(localAddress.getProcId());
 
-        // client id of tdci should be 129 ~ 159
-        negotiationRequestPackage.setClientId(129);
-
-        channelHandlerContext.writeAndFlush(negotiationRequestPackage).sync();
-        LOGGER.debug("send negotiation package, pkt={}", negotiationRequestPackage);
+        channelHandlerContext.writeAndFlush(negotiationRequestPackage).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) {
+                LOGGER.debug("send negotiation package: {}", channelFuture.isSuccess());
+            }
+        });
 
         attempts = 0;
     }
@@ -57,7 +62,6 @@ public class ClientEventHandler extends SimpleChannelInboundHandler<Object> {
 
         flowController.onInactive();
         doubleNetController.onInactive(clientFlag);
-
 
         //使用过程中断线重连
         final EventLoop eventLoop = ctx.channel().eventLoop();

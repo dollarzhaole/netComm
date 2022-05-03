@@ -1,5 +1,6 @@
 spring:
   net-comm:
+    client-id: 129
     server1:
       host: 10.2.54.251
       port: 8001
@@ -11,11 +12,13 @@ spring:
     in-condition:
       rec:
         - type: 0xFF
-        - func: 0xFF
+          func: 0xFF
     local:
       bureau-code: 1
       unit-type: STATION
       unit-id: 1
+      # client id of tdci should be 129 ~ 159
+      client-id: 129
 
 logging:
   level:

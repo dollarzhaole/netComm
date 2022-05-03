@@ -13,18 +13,16 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author zhaole
  * @date 2022-04-02
  */
-public class HeaderEncoder extends MessageToByteEncoder<NegotiationRequestMessage> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HeaderEncoder.class);
-    public static final int VERSION = 0x01;
+public class NegotiationRequestEncoder extends MessageToByteEncoder<NegotiationRequestMessage> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NegotiationRequestEncoder.class);
     private static final int OFFSET_LENGTH = 4;
-    public static int HEADER_LENGTH = 13;
-    private final AtomicLong packageSeq = new AtomicLong(0);
+    private final AtomicLong packageSeq = new AtomicLong(1);
 
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, NegotiationRequestMessage msg, ByteBuf out) throws Exception {
         LOGGER.debug("PackageEncoder, msg={}", msg);
 
-        out.writeIntLE(VERSION);
+        out.writeIntLE(PackageDefine.CURRENT_VERSION);
         out.writeIntLE(0);
         out.writeByte(PackageDefine.NEGOTIATION_REQUEST);
         out.writeIntLE((int) packageSeq.getAndIncrement());
@@ -35,6 +33,6 @@ public class HeaderEncoder extends MessageToByteEncoder<NegotiationRequestMessag
 
         out.writeShortLE(msg.getClientId());
 
-        out.setIntLE(out.readerIndex() + OFFSET_LENGTH, out.readableBytes() - HEADER_LENGTH);
+        out.setIntLE(out.readerIndex() + OFFSET_LENGTH, out.readableBytes() - PackageDefine.HEART_BEAT_LENGTH);
     }
 }

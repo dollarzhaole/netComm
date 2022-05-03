@@ -16,7 +16,7 @@ public class SendTask {
         this.netCommTemplate = netCommTemplate;
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 2000)
     public void sendData() throws IllegalAccessException {
         TestMessage message = new TestMessage();
         message.setType((short) 0x01);

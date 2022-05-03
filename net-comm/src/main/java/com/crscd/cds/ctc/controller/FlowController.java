@@ -45,7 +45,7 @@ public class FlowController {
         this.channel = channel;
     }
 
-    public void onInactive() {
+    public synchronized void onInactive() {
         LOGGER.info("on inactive, clear waiting ack cache, reset recCount, recSequence, sendCount to 0 and sendSequence to 1");
 
         waitingAckCaches.clear();
@@ -53,9 +53,10 @@ public class FlowController {
         recSequence = 0;
         sendCount = 0;
         sendSequence = 1;
+        isNeedReceiveAck = false;
     }
 
-    public boolean isNeedToAck() {
+    public synchronized boolean isNeedToAck() {
         if (windowSize == 0) {
             return false;
         }
@@ -73,6 +74,8 @@ public class FlowController {
     }
 
     public void updateReceive(long seq) {
+        LOGGER.info("rec seq: {}", seq);
+
         if (windowSize > 0 && recCount < MAX_COMM_WIN_SIZE) {
             recWindow[recCount] = seq;
             recCount += 1;
@@ -124,6 +127,7 @@ public class FlowController {
             WaitingAckCache cache = waitingAckCaches.poll();
             if (cache.context.channel().isActive()) {
                 cache.context.writeAndFlush(cache.data, cache.promise);
+                LOGGER.debug("after rec ack, sending cache to {}: {}", cache.context.channel(), cache.data.readableBytes());
             } else {
                 waitingAckCaches.clear();
             }
@@ -168,6 +172,7 @@ public class FlowController {
 
     public void addCache(WaitingAckCache cache) {
         waitingAckCaches.add(cache);
+        LOGGER.debug("add cache, after cache size: {}", waitingAckCaches.size());
 
         if (waitingAckCaches.size() > MAX_WAITING_FOR_ACK_QUEUE_LENGTH) {
             channel.close().addListener(new ChannelFutureListener() {
