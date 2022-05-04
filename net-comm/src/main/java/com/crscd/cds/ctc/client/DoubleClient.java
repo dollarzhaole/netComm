@@ -1,7 +1,7 @@
 package com.crscd.cds.ctc.client;
 
 import com.crscd.cds.ctc.controller.DoubleNetController;
-import com.crscd.cds.ctc.controller.DoubleNetSequence;
+import com.crscd.cds.ctc.protocol.DoubleNetSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +46,10 @@ public class DoubleClient {
     }
 
     public void send(byte[] data) {
+        if ((client1 == null || !client1.isActive()) && (client2 == null || !client2.isActive())) {
+            return;
+        }
+
         DoubleNetSequence dnSeq = doubleNetController.getSendSequence();
 
         if (client1 != null && client1.isActive()) {
@@ -58,6 +62,10 @@ public class DoubleClient {
     }
 
     public void send(byte[] data, short type, short func) {
+        if ((client1 == null || !client1.isActive()) && (client2 == null || !client2.isActive())) {
+            return;
+        }
+
         DoubleNetSequence dnSeq = doubleNetController.getSendSequence();
 
         if (client1 != null && client1.isActive()) {

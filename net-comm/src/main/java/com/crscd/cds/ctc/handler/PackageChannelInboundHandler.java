@@ -1,7 +1,8 @@
 package com.crscd.cds.ctc.handler;
 
 import com.crscd.cds.ctc.controller.DoubleNetController;
-import com.crscd.cds.ctc.controller.DoubleNetSequence;
+import com.crscd.cds.ctc.controller.RegisterController;
+import com.crscd.cds.ctc.protocol.DoubleNetSequence;
 import com.crscd.cds.ctc.forward.FilterRegister;
 import com.crscd.cds.ctc.controller.FlowController;
 import com.crscd.cds.ctc.protocol.*;
@@ -24,6 +25,7 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     private final FilterRegister register;
     private final NetAddress local;
     private final DoubleNetController doubleNetController;
+    private final RegisterController registerController;
     private boolean sentRegister = false;
 
     private static final ByteBuf ACK_BUFFER = Unpooled.buffer(13);
@@ -33,11 +35,12 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         ACK_BUFFER.writeByte(PackageDefine.ACK_CONFIRM);
     }
 
-    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register, NetAddress local, DoubleNetController doubleNetController) {
+    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register, NetAddress local, DoubleNetController doubleNetController, RegisterController registerController) {
         this.flowController = flowController;
         this.register = register;
         this.local = local;
         this.doubleNetController = doubleNetController;
+        this.registerController = registerController;
     }
 
     @Override
@@ -108,11 +111,11 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendRegisterRequest(final ChannelHandlerContext channelHandlerContext) throws InterruptedException {
-        if (sentRegister) {
+        if (registerController.isRegistered()) {
             return;
         }
 
-        sentRegister = true;
+        registerController.setRegistered();
 
         MessageHead msg = MessageHead.createRegisterMessage(register, local);
 

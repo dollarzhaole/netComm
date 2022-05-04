@@ -2,7 +2,7 @@ package com.crscd.cds.ctc.handler;
 
 import com.crscd.cds.ctc.controller.DoubleNetController;
 import com.crscd.cds.ctc.enums.ClientFlagEnum;
-import com.crscd.cds.ctc.controller.DoubleNetSequence;
+import com.crscd.cds.ctc.protocol.DoubleNetSequence;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;

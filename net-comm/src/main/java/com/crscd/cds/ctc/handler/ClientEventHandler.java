@@ -36,12 +36,12 @@ public class ClientEventHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) {
-        System.out.println("recv from server: " + o.toString());
+        LOGGER.debug("{} channel read from {}: {}", clientFlag, channelHandlerContext.channel(), o);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext channelHandlerContext) throws Exception {
-        LOGGER.info(">>>>>>>>> connected: {}", channelHandlerContext.channel());
+        LOGGER.info(">>>>>>>>> {} connected: {}", clientFlag, channelHandlerContext.channel());
 
         final NegotiationRequestMessage negotiationRequestPackage = new NegotiationRequestMessage();
         negotiationRequestPackage.setClientId(localAddress.getProcId());
@@ -49,7 +49,7 @@ public class ClientEventHandler extends SimpleChannelInboundHandler<Object> {
         channelHandlerContext.writeAndFlush(negotiationRequestPackage).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) {
-                LOGGER.debug("send negotiation package: {}", channelFuture.isSuccess());
+                LOGGER.debug("{} send negotiation package: {}", clientFlag, channelFuture.isSuccess());
             }
         });
 
@@ -58,7 +58,7 @@ public class ClientEventHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        LOGGER.info(">>>>>>>>> offline: {}", ctx.channel());
+        LOGGER.info(">>>>>>>>> {} offline: {}", clientFlag, ctx.channel());
 
         flowController.onInactive();
         doubleNetController.onInactive(clientFlag);

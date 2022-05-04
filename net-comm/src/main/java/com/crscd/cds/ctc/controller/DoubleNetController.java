@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.controller;
 
 import com.crscd.cds.ctc.enums.ClientFlagEnum;
+import com.crscd.cds.ctc.protocol.DoubleNetSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +68,7 @@ public class DoubleNetController {
 
         // 收到的重复的包，舍弃
         if (lastReceiveSequence.equals(sequence)) {
-            LOGGER.debug("rec double net {} is less than last {} of net {}", sequence, lastReceiveSequence.getNext(), flag);
+            LOGGER.debug("rec double net {} is equal with {} of net {}, so abandon", sequence, lastReceiveSequence, flag);
             setReceiveSequenceOfOneClient(flag, sequence);
             return ValidResultEnum.ABANDON;
         }

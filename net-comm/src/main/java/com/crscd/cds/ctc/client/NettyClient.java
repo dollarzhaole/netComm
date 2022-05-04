@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import com.crscd.cds.ctc.controller.DoubleNetController;
-import com.crscd.cds.ctc.controller.DoubleNetSequence;
+import com.crscd.cds.ctc.protocol.DoubleNetSequence;
 import com.crscd.cds.ctc.enums.ClientFlagEnum;
 import com.crscd.cds.ctc.forward.FilterRegister;
 import com.crscd.cds.ctc.controller.FlowController;
@@ -78,7 +78,8 @@ public class NettyClient {
     public void init() {
         bootstrap = new Bootstrap();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-        bootstrap.group(workerGroup).option(ChannelOption.SO_KEEPALIVE, true)
+        bootstrap.group(workerGroup)
+                .option(ChannelOption.SO_KEEPALIVE, true)
                 .channel(NioSocketChannel.class)
                 .handler(new NetCommChannelInitializer(this, flowController, localAddress, register, inboundDispatcher, clientFlag, doubleNetController));
     }
@@ -93,11 +94,12 @@ public class NettyClient {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                 if (!channelFuture.isSuccess()) {
+                    LOGGER.info(">>>>>>>>>> {} can not connect server: {}:{}. reason:{}", clientFlag, host, port, channelFuture.cause());
+
                     final EventLoop loop = channelFuture.channel().eventLoop();
                     loop.schedule(new Runnable() {
                         @Override
                         public void run() {
-                            LOGGER.info(">>>>>>>>>> can not connect server: {}:{}", host, port);
                             start();
                         }
                     }, 1L, TimeUnit.SECONDS);

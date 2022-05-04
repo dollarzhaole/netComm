@@ -1,4 +1,4 @@
-package com.crscd.cds.ctc.controller;
+package com.crscd.cds.ctc.protocol;
 
 import io.netty.buffer.ByteBuf;
 

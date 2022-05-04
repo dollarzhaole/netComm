@@ -5,6 +5,7 @@ import com.crscd.cds.ctc.codec.MessageDecoder;
 import com.crscd.cds.ctc.codec.NegotiationRequestEncoder;
 import com.crscd.cds.ctc.codec.MessageEncoder;
 import com.crscd.cds.ctc.controller.DoubleNetController;
+import com.crscd.cds.ctc.controller.RegisterController;
 import com.crscd.cds.ctc.enums.ClientFlagEnum;
 import com.crscd.cds.ctc.forward.FilterRegister;
 import com.crscd.cds.ctc.controller.FlowController;
@@ -30,6 +31,7 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
     private final InboundDispatcher inboundDispatcher;
     private final ClientFlagEnum netFlag;
     private final DoubleNetController doubleNetController;
+    private final RegisterController registerController = new RegisterController();
 
     private static final int MAX_PACKAGE_LENGTH = Integer.MAX_VALUE;
     private static final int LENGTH_FIELD_OFFSET = 4;
@@ -50,17 +52,17 @@ public class NetCommChannelInitializer extends ChannelInitializer<SocketChannel>
     @Override
     protected void initChannel(SocketChannel ch) {
         ChannelPipeline pipeline = ch.pipeline();
-        pipeline.addLast("idleState", new IdleStateHandler(7, 2, 2));
-        pipeline.addLast("hb", new HeartBeatHandler());
-        pipeline.addLast("LengthFieldBasedFrameDecoder", new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, MAX_PACKAGE_LENGTH, LENGTH_FIELD_OFFSET, LENGTH_FIELD_LENGTH, LENGTH_ADJUSTMENT, INITIAL_BYTES_TO_STRIP, true));
-        pipeline.addLast("PackageChannelInboundHandler", new PackageChannelInboundHandler(flowController, register, localAddress, doubleNetController));
-        pipeline.addLast("DoubleNetSeqInboundHandler", new DoubleNetSeqInboundHandler(netFlag, doubleNetController));
-        pipeline.addLast("ForwardInboundHandler", new ForwardInboundHandler());
-        pipeline.addLast("decoder", new MessageDecoder(inboundDispatcher));
-        pipeline.addLast("encoder", new NegotiationRequestEncoder(flowController));
-        pipeline.addLast("handler", new ClientEventHandler(client, flowController, doubleNetController, netFlag, localAddress));
-        pipeline.addLast("DoubleNetSeqOutBoundHandler", new PackageHeadOutBoundHandler(flowController));
-        pipeline.addLast("RegisterMessageEncoder", new MessageEncoder());
-        pipeline.addLast("ExceptionHandler", new ExceptionHandler());
+        pipeline.addLast(new IdleStateHandler(7, 2, 2));
+        pipeline.addLast(new HeartBeatHandler());
+        pipeline.addLast(new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, MAX_PACKAGE_LENGTH, LENGTH_FIELD_OFFSET, LENGTH_FIELD_LENGTH, LENGTH_ADJUSTMENT, INITIAL_BYTES_TO_STRIP, true));
+        pipeline.addLast(new PackageChannelInboundHandler(flowController, register, localAddress, doubleNetController, registerController));
+        pipeline.addLast(new DoubleNetSeqInboundHandler(netFlag, doubleNetController));
+        pipeline.addLast(new ForwardInboundHandler());
+        pipeline.addLast(new MessageDecoder(inboundDispatcher));
+        pipeline.addLast(new NegotiationRequestEncoder(flowController));
+        pipeline.addLast(new ClientEventHandler(client, flowController, doubleNetController, netFlag, localAddress));
+        pipeline.addLast(new PackageHeadOutBoundHandler(flowController));
+        pipeline.addLast(new MessageEncoder());
+        pipeline.addLast(new ExceptionHandler());
     }
 }

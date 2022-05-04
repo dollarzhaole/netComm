@@ -4,11 +4,11 @@ spring:
     server1:
       host: 10.2.54.251
       port: 8001
-      local-host: 9999
+#      local-host: 9999
     server2:
       host: 10.2.54.251
       port: 8002
-      local-port: 9998
+#      local-port: 9998
     in-condition:
       rec:
         - type: 0xFF

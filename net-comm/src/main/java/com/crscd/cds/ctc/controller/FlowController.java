@@ -74,7 +74,7 @@ public class FlowController {
     }
 
     public void updateReceive(long seq) {
-        LOGGER.info("rec seq: {}", seq);
+        LOGGER.info("rec package seq: {}", seq);
 
         if (windowSize > 0 && recCount < MAX_COMM_WIN_SIZE) {
             recWindow[recCount] = seq;
@@ -82,7 +82,7 @@ public class FlowController {
         }
 
         if (recSequence + 1 != seq) {
-            LOGGER.warn("rec seq={}, but last seq={}", seq, recSequence);
+            LOGGER.warn("rec package seq={}, but last seq={}", seq, recSequence);
         }
 
         recSequence = seq;

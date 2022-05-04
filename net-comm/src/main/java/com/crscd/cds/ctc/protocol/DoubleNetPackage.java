@@ -1,6 +1,5 @@
 package com.crscd.cds.ctc.protocol;
 
-import com.crscd.cds.ctc.controller.DoubleNetSequence;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 
