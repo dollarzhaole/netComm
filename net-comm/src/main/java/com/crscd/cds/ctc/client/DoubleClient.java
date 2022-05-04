@@ -11,11 +11,11 @@ import org.slf4j.LoggerFactory;
  */
 public class DoubleClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(DoubleClient.class);
-    private final NettyClient client1;
-    private final NettyClient client2;
     private final DoubleNetController doubleNetController = new DoubleNetController();
+    private final NetCommClient client1;
+    private final NetCommClient client2;
 
-    public DoubleClient(NettyClient client1, NettyClient client2) {
+    public DoubleClient(NetCommClient client1, NetCommClient client2) {
         this.client1 = client1;
         this.client2 = client2;
 

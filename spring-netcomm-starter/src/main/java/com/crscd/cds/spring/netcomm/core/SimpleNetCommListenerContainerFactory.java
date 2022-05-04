@@ -6,7 +6,8 @@ package com.crscd.cds.spring.netcomm.core;
  * @author zhaole
  * @date 2022-04-24
  */
-public class SimpleNetCommListenerContainerFactory extends AbstractNetCommListenerContainerFactory<SimpleMessageListenerContainer> {
+public class SimpleNetCommListenerContainerFactory
+        extends AbstractNetCommListenerContainerFactory<SimpleMessageListenerContainer> {
     @Override
     public SimpleMessageListenerContainer createContainerInstance() {
         return new SimpleMessageListenerContainer();

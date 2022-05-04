@@ -19,18 +19,12 @@ import java.util.Collection;
 public class FilterRegister {
     @XmlElement(name = "rec")
     private ReceiveCondition receiveCondition;
+
     @XmlElement(name = "clt_addr")
     private ClientAddress clientAddress;
 
-    public void setClientAddress(ClientAddress clientAddress) {
-        this.clientAddress = clientAddress;
-    }
-
-    public void setReceiveCondition(ReceiveCondition receiveCondition) {
-        this.receiveCondition = receiveCondition;
-    }
-
-    public static FilterRegister create(Collection<TypeFunc> typeFunc, ClientAddress clientAddress) {
+    public static FilterRegister create(
+            Collection<TypeFunc> typeFunc, ClientAddress clientAddress) {
         FilterRegister filterRegister = new FilterRegister();
 
         ReceiveCondition receiveCondition = new ReceiveCondition();
@@ -44,6 +38,31 @@ public class FilterRegister {
         filterRegister.setClientAddress(clientAddress);
 
         return filterRegister;
+    }
+
+    public void setClientAddress(ClientAddress clientAddress) {
+        this.clientAddress = clientAddress;
+    }
+
+    public void setReceiveCondition(ReceiveCondition receiveCondition) {
+        this.receiveCondition = receiveCondition;
+    }
+
+    public String toXMLString() {
+        try {
+            JAXBContext context = JAXBContext.newInstance(this.getClass());
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+            marshaller.setProperty(Marshaller.JAXB_ENCODING, "utf-8");
+            StringWriter writer = new StringWriter();
+            marshaller.marshal(this, writer);
+            return writer.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public static class ReceiveCondition {
@@ -60,6 +79,13 @@ public class FilterRegister {
         private short type;
         private short func;
 
+        public static TypeFunc create(short type, short func) {
+            TypeFunc tf = new TypeFunc();
+            tf.type = type;
+            tf.func = func;
+            return tf;
+        }
+
         public short getType() {
             return type;
         }
@@ -67,20 +93,15 @@ public class FilterRegister {
         public short getFunc() {
             return func;
         }
-
-        public static TypeFunc create(short type, short func) {
-            TypeFunc tf = new TypeFunc();
-            tf.type = type;
-            tf.func = func;
-            return tf;
-        }
     }
 
     public static class ClientAddress {
         @XmlElement(name = "bureau_code")
         private int bureauCode;
+
         @XmlElement(name = "unit_type")
         private int unitType;
+
         @XmlElement(name = "unit_id")
         private int unitId;
 
@@ -113,22 +134,5 @@ public class FilterRegister {
         public void setUnitId(int unitId) {
             this.unitId = unitId;
         }
-    }
-
-    public String toXMLString() {
-        try {
-            JAXBContext context = JAXBContext.newInstance(this.getClass());
-            Marshaller marshaller = context.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
-            marshaller.setProperty(Marshaller.JAXB_ENCODING, "utf-8");
-            StringWriter writer = new StringWriter();
-            marshaller.marshal(this, writer);
-            return writer.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 }

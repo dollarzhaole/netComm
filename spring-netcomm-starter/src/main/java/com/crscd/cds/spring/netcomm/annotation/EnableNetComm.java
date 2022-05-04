@@ -14,5 +14,4 @@ import java.lang.annotation.*;
 @Documented
 @Inherited
 @Import({NetCommAutoConfiguration.class})
-public @interface EnableNetComm {
-}
+public @interface EnableNetComm {}

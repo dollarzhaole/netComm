@@ -15,8 +15,10 @@ import java.util.concurrent.Executor;
  * @author zhaole
  * @date 2022-04-24
  */
-public abstract class AbstractMessageListenerContainer implements MessageListenerContainer, DisposableBean {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageListenerContainer.class);
+public abstract class AbstractMessageListenerContainer
+        implements MessageListenerContainer, DisposableBean {
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(AbstractMessageListenerContainer.class);
 
     private volatile MessageListener messageListener;
     private short type;
@@ -52,6 +54,7 @@ public abstract class AbstractMessageListenerContainer implements MessageListene
     public void setFunc(short func) {
         this.func = func;
     }
+
     public void setMessageConverter(MessageConverter messageConverter) {
         this.messageConverter = messageConverter;
     }
@@ -69,26 +72,30 @@ public abstract class AbstractMessageListenerContainer implements MessageListene
         }
 
         try {
-            executor.execute(() -> {
-                try {
-                    Object object = messageConverter.fromMessage(message, parameterType);
-                    listener.onMessage(object);
-                } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
-                    LOGGER.debug("exception happened while onMessage: ", e);
-                }
-            });
+            executor.execute(
+                    () -> {
+                        try {
+                            Object object = messageConverter.fromMessage(message, parameterType);
+                            listener.onMessage(object);
+                        } catch (InstantiationException
+                                | InvocationTargetException
+                                | IllegalAccessException e) {
+                            LOGGER.debug("exception happened while onMessage: ", e);
+                        }
+                    });
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw wrapToListenerExecutionFailedExceptionIfNeeded(e, message);
         }
     }
 
-    protected Exception wrapToListenerExecutionFailedExceptionIfNeeded(Exception e, byte[] message) {
-//        if (!(e instanceof ListenerExecutionFailedException)) {
-//            // Wrap exception to ListenerExecutionFailedException.
-//            return new ListenerExecutionFailedException("Listener threw exception", e, message);
-//        }
+    protected Exception wrapToListenerExecutionFailedExceptionIfNeeded(
+            Exception e, byte[] message) {
+        //        if (!(e instanceof ListenerExecutionFailedException)) {
+        //            // Wrap exception to ListenerExecutionFailedException.
+        //            return new ListenerExecutionFailedException("Listener threw exception", e,
+        // message);
+        //        }
         return e;
     }
 

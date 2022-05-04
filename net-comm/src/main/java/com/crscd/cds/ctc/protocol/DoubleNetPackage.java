@@ -11,7 +11,8 @@ public class DoubleNetPackage {
     private DoubleNetSequence doubleNetSequence;
     private MessageHead messageHead;
 
-    public static DoubleNetPackage create(DoubleNetSequence doubleNetSequence, MessageHead messageHead) {
+    public static DoubleNetPackage create(
+            DoubleNetSequence doubleNetSequence, MessageHead messageHead) {
         DoubleNetPackage pkt = new DoubleNetPackage();
         pkt.doubleNetSequence = doubleNetSequence;
         pkt.messageHead = messageHead;

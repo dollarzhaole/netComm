@@ -11,5 +11,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface NetCommListener {
     short type() default 0x00;
+
     short func() default 0x00;
 }

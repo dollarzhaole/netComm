@@ -8,7 +8,9 @@ import javax.annotation.Nullable;
  */
 public interface MessageConverter {
     @Nullable
-    Object fromMessage(byte[] data, Class<?> targetClass) throws InstantiationException, IllegalAccessException;
+    Object fromMessage(byte[] data, Class<?> targetClass)
+            throws InstantiationException, IllegalAccessException;
+
     @Nullable
     byte[] toMessage(Object object) throws IllegalAccessException;
 }

@@ -11,15 +11,6 @@ import org.slf4j.LoggerFactory;
  */
 public class DoubleNetController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DoubleNetController.class);
-
-
-    public enum ValidResultEnum {
-        ACCEPT,
-        ABANDON,
-        CLOSE_ONE,
-        CLOSE_BOTH,
-    }
-
     private final DoubleNetSequence lastReceiveSequence1 = new DoubleNetSequence(0, 0);
     private final DoubleNetSequence lastReceiveSequence2 = new DoubleNetSequence(0, 0);
     private final DoubleNetSequence lastReceiveSequence = new DoubleNetSequence(0, 0);
@@ -34,11 +25,9 @@ public class DoubleNetController {
     }
 
     /**
-     * 判断双网序号是否成立。有以下几种情况需要考虑
-     * 1. 双网正常
-     * 2. 只有网络1连接
-     * 3. 只启动网络1，网络2断开。网络2连接
-     * 4. 只启动网络1，网络2断开。网络2连接，网络1断开，网络1连接
+     * 判断双网序号是否成立。有以下几种情况需要考虑 1. 双网正常 2. 只有网络1连接 3. 只启动网络1，网络2断开。网络2连接 4.
+     * 只启动网络1，网络2断开。网络2连接，网络1断开，网络1连接
+     *
      * @param sequence
      * @param flag
      * @return
@@ -47,7 +36,11 @@ public class DoubleNetController {
         DoubleNetSequence preOneClientReceive = getReceiveSequence(flag);
 
         if (!isContinuous(preOneClientReceive, sequence)) {
-            LOGGER.warn("rec sequence {} of {} is not continuous with pre {}", sequence, flag, preOneClientReceive);
+            LOGGER.warn(
+                    "rec sequence {} of {} is not continuous with pre {}",
+                    sequence,
+                    flag,
+                    preOneClientReceive);
             return ValidResultEnum.CLOSE_ONE;
         }
 
@@ -68,31 +61,48 @@ public class DoubleNetController {
 
         // 收到的重复的包，舍弃
         if (lastReceiveSequence.equals(sequence)) {
-            LOGGER.debug("rec double net {} is equal with {} of net {}, so abandon", sequence, lastReceiveSequence, flag);
+            LOGGER.debug(
+                    "rec double net {} is equal with {} of net {}, so abandon",
+                    sequence,
+                    lastReceiveSequence,
+                    flag);
             setReceiveSequenceOfOneClient(flag, sequence);
             return ValidResultEnum.ABANDON;
         }
 
         // 感觉这种情况不应该发生
         if (lastReceiveSequence.getNext().isFarFrom(sequence)) {
-            LOGGER.debug("rec double net {} is far from {} of net {}", sequence, lastReceiveSequence.getNext(), flag);
+            LOGGER.debug(
+                    "rec double net {} is far from {} of net {}",
+                    sequence,
+                    lastReceiveSequence.getNext(),
+                    flag);
             return ValidResultEnum.CLOSE_ONE;
         }
 
         // 收到的包小于当前的包
         if (lastReceiveSequence.getNext().moreThan(sequence)) {
-            LOGGER.debug("rec double net seq {} is less than last {} of net {}", sequence, lastReceiveSequence.getNext(), flag);
+            LOGGER.debug(
+                    "rec double net seq {} is less than last {} of net {}",
+                    sequence,
+                    lastReceiveSequence.getNext(),
+                    flag);
             setReceiveSequenceOfOneClient(flag, sequence);
             return ValidResultEnum.ABANDON;
         }
 
         // 正常情况下，lastReceiveSequence大于等于两个客户端的receiveSequence，如果这个条件不成立，就说明双网序号乱了，重新连接
-        if (lastReceiveSequence1.moreThan(lastReceiveSequence) || lastReceiveSequence2.moreThan(lastReceiveSequence)) {
+        if (lastReceiveSequence1.moreThan(lastReceiveSequence)
+                || lastReceiveSequence2.moreThan(lastReceiveSequence)) {
             return ValidResultEnum.CLOSE_BOTH;
         }
 
         if (lastReceiveSequence.getNext().lessThan(sequence)) {
-            LOGGER.debug("rec double net seq {} is more than next {} of net {}", sequence, lastReceiveSequence.getNext(), flag);
+            LOGGER.debug(
+                    "rec double net seq {} is more than next {} of net {}",
+                    sequence,
+                    lastReceiveSequence.getNext(),
+                    flag);
             return ValidResultEnum.CLOSE_ONE;
         }
 
@@ -138,5 +148,12 @@ public class DoubleNetController {
         }
 
         return pre.getNext().equals(rec);
+    }
+
+    public enum ValidResultEnum {
+        ACCEPT,
+        ABANDON,
+        CLOSE_ONE,
+        CLOSE_BOTH,
     }
 }

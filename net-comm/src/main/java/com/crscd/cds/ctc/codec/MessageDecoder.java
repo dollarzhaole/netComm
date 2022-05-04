@@ -1,15 +1,17 @@
 package com.crscd.cds.ctc.codec;
 
 import com.crscd.cds.ctc.controller.InboundDispatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-/** 应用层协议
+/**
+ * 应用层协议
+ *
  * @author zhaole
  * @date 2022-04-03
  */
@@ -22,7 +24,9 @@ public class MessageDecoder extends ByteToMessageDecoder {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+    protected void decode(
+            ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list)
+            throws Exception {
         LOGGER.debug("ApplicationDataDecoder decode, byteBuf={}", byteBuf);
 
         long bodyLen = byteBuf.readUnsignedIntLE();

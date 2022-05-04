@@ -1,10 +1,9 @@
 package com.crscd.cds.ctc.handler;
 
 import com.crscd.cds.ctc.controller.DoubleNetController;
-import com.crscd.cds.ctc.controller.RegisterController;
-import com.crscd.cds.ctc.protocol.DoubleNetSequence;
-import com.crscd.cds.ctc.forward.FilterRegister;
 import com.crscd.cds.ctc.controller.FlowController;
+import com.crscd.cds.ctc.controller.RegisterController;
+import com.crscd.cds.ctc.forward.FilterRegister;
 import com.crscd.cds.ctc.protocol.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -12,6 +11,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,22 +20,28 @@ import org.slf4j.LoggerFactory;
  * @date 2022-04-12
  */
 public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PackageChannelInboundHandler.class);
-    private final FlowController flowController;
-    private final FilterRegister register;
-    private final NetAddress local;
-    private final DoubleNetController doubleNetController;
-    private final RegisterController registerController;
-    private boolean sentRegister = false;
-
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(PackageChannelInboundHandler.class);
     private static final ByteBuf ACK_BUFFER = Unpooled.buffer(13);
+
     static {
         ACK_BUFFER.writeIntLE(0x01);
         ACK_BUFFER.writeIntLE(0);
         ACK_BUFFER.writeByte(PackageDefine.ACK_CONFIRM);
     }
 
-    public PackageChannelInboundHandler(FlowController flowController, FilterRegister register, NetAddress local, DoubleNetController doubleNetController, RegisterController registerController) {
+    private final FlowController flowController;
+    private final FilterRegister register;
+    private final NetAddress local;
+    private final DoubleNetController doubleNetController;
+    private final RegisterController registerController;
+
+    public PackageChannelInboundHandler(
+            FlowController flowController,
+            FilterRegister register,
+            NetAddress local,
+            DoubleNetController doubleNetController,
+            RegisterController registerController) {
         this.flowController = flowController;
         this.register = register;
         this.local = local;
@@ -53,7 +59,8 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private boolean doChannelRead(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
+    private boolean doChannelRead(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf)
+            throws Exception {
         byteBuf.readUnsignedIntLE();
         byteBuf.readUnsignedIntLE();
         short type = byteBuf.readUnsignedByte();
@@ -67,7 +74,10 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
             doHeartBeat(channelHandlerContext);
             return false;
         } else if (type == PackageDefine.DATA) {
-            LOGGER.debug("rec app data double net ({},{})", byteBuf.getUnsignedIntLE(13), byteBuf.getUnsignedInt(17));
+            LOGGER.debug(
+                    "rec app data double net ({},{})",
+                    byteBuf.getUnsignedIntLE(13),
+                    byteBuf.getUnsignedInt(17));
             checkAndSendAckIfNecessary(channelHandlerContext, sequence);
         } else if (type == PackageDefine.ACK_CONFIRM) {
             doAckConfirm(channelHandlerContext, sequence);
@@ -77,7 +87,8 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         return true;
     }
 
-    private void checkAndSendAckIfNecessary(ChannelHandlerContext channelHandlerContext, long sequence) {
+    private void checkAndSendAckIfNecessary(
+            ChannelHandlerContext channelHandlerContext, long sequence) {
         flowController.updateReceive(sequence);
         if (flowController.isNeedToAck()) {
             sendAck(channelHandlerContext, sequence);
@@ -89,12 +100,17 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         ByteBuf buf = ACK_BUFFER.copy();
         buf.writeIntLE((int) sequence);
 
-        channelHandlerContext.writeAndFlush(buf).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                LOGGER.info("send ack seq={} to {}", sequence, channelHandlerContext);
-            }
-        });
+        channelHandlerContext
+                .writeAndFlush(buf)
+                .addListener(
+                        new ChannelFutureListener() {
+                            @Override
+                            public void operationComplete(ChannelFuture channelFuture)
+                                    throws Exception {
+                                LOGGER.info(
+                                        "send ack seq={} to {}", sequence, channelHandlerContext);
+                            }
+                        });
     }
 
     private long getPackageSequence(ByteBuf buffer) {
@@ -110,7 +126,8 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         flowController.onReceiveAck(sequence);
     }
 
-    private void sendRegisterRequest(final ChannelHandlerContext channelHandlerContext) throws InterruptedException {
+    private void sendRegisterRequest(final ChannelHandlerContext channelHandlerContext)
+            throws InterruptedException {
         if (registerController.isRegistered()) {
             return;
         }
@@ -122,12 +139,20 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         DoubleNetSequence sequence = DoubleNetSequence.createRegisterDoubleNetSequence();
         DoubleNetPackage pkt = DoubleNetPackage.create(sequence, msg);
 
-        channelHandlerContext.channel().writeAndFlush(pkt).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                LOGGER.info("send register xml to {}: {}", channelHandlerContext.channel(), channelFuture.isSuccess());
-            }
-        });
+        channelHandlerContext
+                .channel()
+                .writeAndFlush(pkt)
+                .addListener(
+                        new ChannelFutureListener() {
+                            @Override
+                            public void operationComplete(ChannelFuture channelFuture)
+                                    throws Exception {
+                                LOGGER.info(
+                                        "send register xml to {}: {}",
+                                        channelHandlerContext.channel(),
+                                        channelFuture.isSuccess());
+                            }
+                        });
     }
 
     private void doNegotiationResponse(ChannelHandlerContext context, ByteBuf byteBuf) {
@@ -136,6 +161,20 @@ public class PackageChannelInboundHandler extends ChannelInboundHandlerAdapter {
         LOGGER.info("receive negotiation response from {}: {}", context.channel(), message);
 
         // todo 增加动态添加Handler到NettyClient
+        Short windowSize = message.getWindowSize();
+        Short heartBeatInterval = message.getHeartBeatInterval();
+        Short heartBeatOverTime = message.getHeartBeatOverTime();
+        Short overTime = message.getAckOverTime();
+        Short confirm = message.getAck();
+
+        flowController.setWindowSize(windowSize);
+        flowController.setAckOverTimeInterval(overTime);
+
+        context.channel()
+                .pipeline()
+                .addFirst(
+                        new IdleStateHandler(
+                                heartBeatOverTime, heartBeatInterval, heartBeatOverTime));
     }
 
     private void doHeartBeat(ChannelHandlerContext context) {

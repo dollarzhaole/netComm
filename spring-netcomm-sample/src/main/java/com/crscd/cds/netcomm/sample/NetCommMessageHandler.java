@@ -1,6 +1,5 @@
 package com.crscd.cds.netcomm.sample;
 
-import com.crscd.cds.ctc.utils.HexUtils;
 import com.crscd.cds.spring.netcomm.annotation.NetCommListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

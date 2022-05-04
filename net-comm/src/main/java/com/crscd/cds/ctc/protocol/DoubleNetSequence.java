@@ -23,6 +23,7 @@ public class DoubleNetSequence {
 
     /**
      * 因为连接建立时，双网序号是(0,0)，注册消息是发送的第一包，所以双网序号是(1,0)
+     *
      * @return 注册消息的双网序号
      */
     public static DoubleNetSequence createRegisterDoubleNetSequence() {
@@ -97,16 +98,16 @@ public class DoubleNetSequence {
     }
 
     @Override
+    public int hashCode() {
+        return Arrays.hashCode(new long[] {low, high});
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DoubleNetSequence that = (DoubleNetSequence) o;
         return low == that.low && high == that.high;
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(new long[] {low, high});
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.crscd.cds.spring.netcomm.converter.MessageConverter;
 import com.crscd.cds.spring.netcomm.exception.NetCommIllegalStateException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.Nullable;
@@ -20,7 +19,8 @@ public class MessageContentConverter implements MessageConverter {
 
     @Nullable
     @Override
-    public Object fromMessage(byte[] data, Class<?> targetClass) throws InstantiationException, IllegalAccessException {
+    public Object fromMessage(byte[] data, Class<?> targetClass)
+            throws InstantiationException, IllegalAccessException {
         List<Field> fields = ReflectionUtility.getAllFieldsList(targetClass);
 
         Object object = targetClass.newInstance();
@@ -44,7 +44,8 @@ public class MessageContentConverter implements MessageConverter {
             } else if (Short.class.equals(field.getType())) {
                 value = buf.readUnsignedByte();
             } else {
-                throw new NetCommIllegalStateException("unrecognized filed type: " + field.getType());
+                throw new NetCommIllegalStateException(
+                        "unrecognized filed type: " + field.getType());
             }
 
             ReflectionUtils.setField(field, object, value);
@@ -80,6 +81,4 @@ public class MessageContentConverter implements MessageConverter {
         out.readBytes(bytes);
         return bytes;
     }
-
-
 }

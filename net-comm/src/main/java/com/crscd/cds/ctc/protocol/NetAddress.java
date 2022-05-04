@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
  * @date 2022-04-14
  */
 public class NetAddress {
+    public static final int DEFAULT_CLIENT_ID = 129;
     private short bureauType = 0xFF;
     private short bureauCode;
     private short sysType = 0xFF;
@@ -20,9 +21,8 @@ public class NetAddress {
     private short userType = 0xFF;
     private long userId = 0xFF;
 
-    public static final int DEFAULT_CLIENT_ID = 129;
-
-    public static NetAddress create(short bureauCode, short unitType, int unitId, Integer clientId) {
+    public static NetAddress create(
+            short bureauCode, short unitType, int unitId, Integer clientId) {
         NetAddress address = new NetAddress();
         address.setBureauCode(bureauCode);
         address.setUnitType(unitType);

@@ -12,7 +12,6 @@ import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * HeartbeatServer Handler.
  *
@@ -22,7 +21,6 @@ import org.slf4j.LoggerFactory;
 public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HeartBeatHandler.class);
     private static final ByteBuf HEART_BEAT_BUF = Unpooled.buffer(PackageDefine.HEART_BEAT_LENGTH);
-    private int index = 0;
 
     static {
         HEART_BEAT_BUF.writeIntLE(PackageDefine.CURRENT_VERSION);
@@ -31,9 +29,10 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
         HEART_BEAT_BUF.writeIntLE(0);
     }
 
+    private int index = 0;
+
     @Override
-    public void userEventTriggered(final ChannelHandlerContext ctx, Object evt)
-            throws Exception {
+    public void userEventTriggered(final ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state().equals(IdleState.READER_IDLE)) {
@@ -51,12 +50,15 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
     private void onReadIdle(final ChannelHandlerContext ctx) {
         LOGGER.debug("read idle from {}", ctx.channel());
         try {
-            ctx.close().addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    LOGGER.info("read idle, so channel closed: {}", ctx);
-                }
-            });
+            ctx.close()
+                    .addListener(
+                            new ChannelFutureListener() {
+                                @Override
+                                public void operationComplete(ChannelFuture channelFuture)
+                                        throws Exception {
+                                    LOGGER.info("read idle, so channel closed: {}", ctx);
+                                }
+                            });
         } catch (Exception e) {
             LOGGER.error("HeartBeatHandler.onReadIdle exception", e);
         }
@@ -74,12 +76,15 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
         } else {
             try {
                 LOGGER.info("ctx is inactive, so about to close {}", ctx);
-                ctx.close().addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                        LOGGER.info("ctx is inactive, so close {} finished", ctx);
-                    }
-                });
+                ctx.close()
+                        .addListener(
+                                new ChannelFutureListener() {
+                                    @Override
+                                    public void operationComplete(ChannelFuture channelFuture)
+                                            throws Exception {
+                                        LOGGER.info("ctx is inactive, so close {} finished", ctx);
+                                    }
+                                });
             } catch (Exception e) {
                 LOGGER.error("close exception:", e);
             }

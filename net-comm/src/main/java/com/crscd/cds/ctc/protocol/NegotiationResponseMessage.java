@@ -7,34 +7,45 @@ import io.netty.buffer.ByteBuf;
  * @date 2022-04-02
  */
 public class NegotiationResponseMessage {
-    private Short window;
-    private Short confirm;
-    private Short overTime;
+    private Short windowSize;
+    private Short ack;
+    private Short ackOverTime;
     private Short heartBeatInterval;
     private Short heartBeatOverTime;
 
-    public Short getWindow() {
-        return window;
+    public static NegotiationResponseMessage decode(ByteBuf buffer) {
+        NegotiationResponseMessage message = new NegotiationResponseMessage();
+        message.windowSize = buffer.readUnsignedByte();
+        message.ack = buffer.readUnsignedByte();
+        message.ackOverTime = buffer.readUnsignedByte();
+        message.heartBeatInterval = buffer.readUnsignedByte();
+        message.heartBeatOverTime = buffer.readUnsignedByte();
+
+        return message;
     }
 
-    public void setWindow(Short window) {
-        this.window = window;
+    public Short getWindowSize() {
+        return windowSize;
     }
 
-    public Short getConfirm() {
-        return confirm;
+    public void setWindowSize(Short windowSize) {
+        this.windowSize = windowSize;
     }
 
-    public void setConfirm(Short confirm) {
-        this.confirm = confirm;
+    public Short getAck() {
+        return ack;
     }
 
-    public Short getOverTime() {
-        return overTime;
+    public void setAck(Short ack) {
+        this.ack = ack;
     }
 
-    public void setOverTime(Short overTime) {
-        this.overTime = overTime;
+    public Short getAckOverTime() {
+        return ackOverTime;
+    }
+
+    public void setAckOverTime(Short ackOverTime) {
+        this.ackOverTime = ackOverTime;
     }
 
     public Short getHeartBeatInterval() {
@@ -53,25 +64,19 @@ public class NegotiationResponseMessage {
         this.heartBeatOverTime = heartBeatOverTime;
     }
 
-    public static NegotiationResponseMessage decode(ByteBuf buffer) {
-        NegotiationResponseMessage message = new NegotiationResponseMessage();
-        message.window = buffer.readUnsignedByte();
-        message.confirm = buffer.readUnsignedByte();
-        message.overTime = buffer.readUnsignedByte();
-        message.heartBeatInterval = buffer.readUnsignedByte();
-        message.heartBeatOverTime = buffer.readUnsignedByte();
-
-        return message;
-    }
-
     @Override
     public String toString() {
-        return "NegotiationResponseMessage{" +
-                "window=" + window +
-                ", confirm=" + confirm +
-                ", overTime=" + overTime +
-                ", heartBeatInterval=" + heartBeatInterval +
-                ", heartBeatOverTime=" + heartBeatOverTime +
-                '}';
+        return "NegotiationResponseMessage{"
+                + "window="
+                + windowSize
+                + ", confirm="
+                + ack
+                + ", overTime="
+                + ackOverTime
+                + ", heartBeatInterval="
+                + heartBeatInterval
+                + ", heartBeatOverTime="
+                + heartBeatOverTime
+                + '}';
     }
 }

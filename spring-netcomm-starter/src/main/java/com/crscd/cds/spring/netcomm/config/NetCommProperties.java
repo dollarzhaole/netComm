@@ -12,8 +12,7 @@ import java.util.Collection;
 @ConfigurationProperties(prefix = "spring.net-comm")
 public class NetCommProperties {
     private Server server1;
-    @Nullable
-    private Server server2;
+    @Nullable private Server server2;
     private LocalAddress local;
     private ReceiveFilter inCondition;
 
@@ -119,22 +118,6 @@ public class NetCommProperties {
         private Integer unitId;
         private Integer clientId;
 
-        public enum UnitTypeEnum {
-            CENTER((short) 0x01),
-            STATION((short) 0x02),
-            ;
-
-            private final short value;
-
-            public short getValue() {
-                return this.value;
-            }
-
-            UnitTypeEnum(short value) {
-                this.value = value;
-            }
-        }
-
         public Integer getClientId() {
             return clientId;
         }
@@ -165,6 +148,22 @@ public class NetCommProperties {
 
         public void setUnitId(Integer unitId) {
             this.unitId = unitId;
+        }
+
+        public enum UnitTypeEnum {
+            CENTER((short) 0x01),
+            STATION((short) 0x02),
+            ;
+
+            private final short value;
+
+            UnitTypeEnum(short value) {
+                this.value = value;
+            }
+
+            public short getValue() {
+                return this.value;
+            }
         }
     }
 }

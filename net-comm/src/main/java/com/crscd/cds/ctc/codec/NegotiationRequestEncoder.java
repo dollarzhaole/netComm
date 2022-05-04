@@ -1,7 +1,8 @@
 package com.crscd.cds.ctc.codec;
 
 import com.crscd.cds.ctc.controller.FlowController;
-import com.crscd.cds.ctc.protocol.*;
+import com.crscd.cds.ctc.protocol.NegotiationRequestMessage;
+import com.crscd.cds.ctc.protocol.PackageDefine;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -22,7 +23,9 @@ public class NegotiationRequestEncoder extends MessageToByteEncoder<NegotiationR
     }
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, NegotiationRequestMessage msg, ByteBuf out) throws Exception {
+    protected void encode(
+            ChannelHandlerContext channelHandlerContext, NegotiationRequestMessage msg, ByteBuf out)
+            throws Exception {
         LOGGER.debug("PackageEncoder, msg={}", msg);
 
         out.writeIntLE(PackageDefine.CURRENT_VERSION);
@@ -32,6 +35,8 @@ public class NegotiationRequestEncoder extends MessageToByteEncoder<NegotiationR
 
         out.writeShortLE(msg.getClientId());
 
-        out.setIntLE(out.readerIndex() + OFFSET_LENGTH, out.readableBytes() - PackageDefine.HEART_BEAT_LENGTH);
+        out.setIntLE(
+                out.readerIndex() + OFFSET_LENGTH,
+                out.readableBytes() - PackageDefine.HEART_BEAT_LENGTH);
     }
 }

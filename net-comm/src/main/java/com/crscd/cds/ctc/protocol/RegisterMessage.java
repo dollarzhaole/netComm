@@ -12,12 +12,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * @date 2022-04-18
  */
 public class RegisterMessage {
+    private static final AtomicLong REQUEST_CODE = new AtomicLong(1);
     private short operationCode;
     private long requestCode;
     private short result;
     private FilterRegister register;
-
-    private static final AtomicLong REQUEST_CODE = new AtomicLong(1);
 
     public static RegisterMessage create(FilterRegister register) {
         RegisterMessage message = new RegisterMessage();

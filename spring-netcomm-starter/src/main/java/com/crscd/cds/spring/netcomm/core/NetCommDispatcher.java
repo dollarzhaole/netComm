@@ -18,9 +18,12 @@ public class NetCommDispatcher implements InboundDispatcher {
 
     @Override
     public void dispatch(short type, short func, byte[] data) throws Exception {
-        Optional<AbstractMessageListenerContainer> containerOptional = listenerContainers.parallelStream()
-                .filter(container -> container.getType() == type && container.getFunc() == func)
-                .findFirst();
+        Optional<AbstractMessageListenerContainer> containerOptional =
+                listenerContainers.parallelStream()
+                        .filter(
+                                container ->
+                                        container.getType() == type && container.getFunc() == func)
+                        .findFirst();
 
         if (!containerOptional.isPresent()) {
             LOGGER.warn("no matched listener: {} {}", type, func);

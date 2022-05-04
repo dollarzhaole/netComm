@@ -15,7 +15,9 @@ public class ReflectionUtility {
         Stack<Class<?>> classes = new Stack<Class<?>>();
         List<Field> allFields = new ArrayList<Field>();
 
-        for(Class<?> currentClass = cls; currentClass != null; currentClass = currentClass.getSuperclass()) {
+        for (Class<?> currentClass = cls;
+                currentClass != null;
+                currentClass = currentClass.getSuperclass()) {
             classes.push(currentClass);
         }
 

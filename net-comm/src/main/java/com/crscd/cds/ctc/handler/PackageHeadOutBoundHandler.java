@@ -5,12 +5,15 @@ import com.crscd.cds.ctc.protocol.PackageDefine;
 import com.crscd.cds.ctc.utils.HexUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * 在此Handler中包裹最外层的的包头
+ *
  * @author zhaole
  * @date 2022-04-14
  */
@@ -23,7 +26,8 @@ public class PackageHeadOutBoundHandler extends ChannelOutboundHandlerAdapter {
     }
 
     @Override
-    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+            throws Exception {
         LOGGER.debug("DoubleNetSeqOutBoundHandler: {}", msg);
 
         if (!(msg instanceof ByteBuf)) {
@@ -46,7 +50,8 @@ public class PackageHeadOutBoundHandler extends ChannelOutboundHandlerAdapter {
     }
 
     private void waitForAck(ChannelHandlerContext ctx, ByteBuf msg, ChannelPromise promise) {
-        FlowController.WaitingAckCache cache = FlowController.WaitingAckCache.create(ctx, msg, promise);
+        FlowController.WaitingAckCache cache =
+                FlowController.WaitingAckCache.create(ctx, msg, promise);
         flowController.addCache(cache);
     }
 

@@ -21,7 +21,8 @@ public class MessageHead {
     private List<ConditionalProperty> properties;
     private byte[] data;
 
-    public static MessageHead createApplicationData(short type, short func, byte[] data, NetAddress src) {
+    public static MessageHead createApplicationData(
+            short type, short func, byte[] data, NetAddress src) {
         return create(type, func, data, DataType.FORWARD, src);
     }
 
@@ -54,7 +55,8 @@ public class MessageHead {
         return create(type, func, data, DataType.REGISTER, src);
     }
 
-    private static MessageHead create(short type, short func, byte[] data, short dataType, NetAddress src) {
+    private static MessageHead create(
+            short type, short func, byte[] data, short dataType, NetAddress src) {
         MessageHead message = new MessageHead();
         message.setForwardType(DataType.MSGPACK_FORWARD_TYPE_BY_REG_LOCAL_DISPATCH);
         message.setData(data);

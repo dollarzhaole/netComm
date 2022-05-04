@@ -7,9 +7,7 @@ import io.netty.buffer.ByteBuf;
  * @date 2022-04-14
  */
 public class ConditionalProperty {
-    public void encode(ByteBuf buffer) {
-    }
+    public void encode(ByteBuf buffer) {}
 
-    public void decode(ByteBuf buffer) {
-    }
+    public void decode(ByteBuf buffer) {}
 }

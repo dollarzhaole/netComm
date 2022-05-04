@@ -8,22 +8,19 @@ import java.util.concurrent.Executor;
 
 /**
  * 抽象 Amazon SQS 监听容器创建工厂类
- * @param <C> 监听容器
  *
+ * @param <C> 监听容器
  * @author zhaole
  * @date 2022-04-24
  */
-public abstract class AbstractNetCommListenerContainerFactory<C extends AbstractMessageListenerContainer>
+public abstract class AbstractNetCommListenerContainerFactory<
+                C extends AbstractMessageListenerContainer>
         implements NetCommListenerContainerFactory<C>, InitializingBean {
 
     private NetCommDispatcher dispatcher;
     private MessageConverter messageConverter;
 
     private Executor taskExecutor;
-
-    public void setDispatcher(NetCommDispatcher dispatcher) {
-        this.dispatcher = dispatcher;
-    }
 
     public void setMessageConverter(MessageConverter messageConverter) {
         this.messageConverter = messageConverter;
@@ -37,8 +34,16 @@ public abstract class AbstractNetCommListenerContainerFactory<C extends Abstract
         return dispatcher;
     }
 
+    public void setDispatcher(NetCommDispatcher dispatcher) {
+        this.dispatcher = dispatcher;
+    }
+
     @Override
-    public C createListenerContainer(short type, short func, Class<? extends MessageContent> parameterType, MessageListener messageListener) {
+    public C createListenerContainer(
+            short type,
+            short func,
+            Class<? extends MessageContent> parameterType,
+            MessageListener messageListener) {
         C instance = createContainerInstance();
 
         instance.setType(type);
@@ -53,13 +58,9 @@ public abstract class AbstractNetCommListenerContainerFactory<C extends Abstract
     }
 
     @Override
-    public void afterPropertiesSet(){
-
-    }
+    public void afterPropertiesSet() {}
 
     protected abstract C createContainerInstance();
 
-    protected void initializeContainer(C instance) {
-    }
-
+    protected void initializeContainer(C instance) {}
 }

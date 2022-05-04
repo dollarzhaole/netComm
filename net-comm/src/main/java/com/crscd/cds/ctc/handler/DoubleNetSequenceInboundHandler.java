@@ -15,12 +15,14 @@ import org.slf4j.LoggerFactory;
  * @author zhaole
  * @date 2022-04-12
  */
-public class DoubleNetSeqInboundHandler extends ChannelInboundHandlerAdapter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DoubleNetSeqInboundHandler.class);
+public class DoubleNetSequenceInboundHandler extends ChannelInboundHandlerAdapter {
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(DoubleNetSequenceInboundHandler.class);
     private final ClientFlagEnum clientFlag;
     private final DoubleNetController doubleNetController;
 
-    public DoubleNetSeqInboundHandler(ClientFlagEnum clientFlag, DoubleNetController doubleNetController) {
+    public DoubleNetSequenceInboundHandler(
+            ClientFlagEnum clientFlag, DoubleNetController doubleNetController) {
         this.clientFlag = clientFlag;
         this.doubleNetController = doubleNetController;
     }
@@ -46,7 +48,8 @@ public class DoubleNetSeqInboundHandler extends ChannelInboundHandlerAdapter {
         long high = msg.readUnsignedIntLE();
 
         DoubleNetSequence sequence = DoubleNetSequence.create(low, high);
-        DoubleNetController.ValidResultEnum result = doubleNetController.validate(sequence, clientFlag);
+        DoubleNetController.ValidResultEnum result =
+                doubleNetController.validate(sequence, clientFlag);
         if (result.equals(DoubleNetController.ValidResultEnum.ABANDON)) {
             return false;
         }
@@ -56,21 +59,31 @@ public class DoubleNetSeqInboundHandler extends ChannelInboundHandlerAdapter {
         }
 
         if (result.equals(DoubleNetController.ValidResultEnum.CLOSE_ONE)) {
-            ctx.close().addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture channelFuture) {
-                    LOGGER.info("close {} because of double net sequence error: {}", clientFlag, channelFuture.isSuccess());
-                }
-            });
+            ctx.close()
+                    .addListener(
+                            new ChannelFutureListener() {
+                                @Override
+                                public void operationComplete(ChannelFuture channelFuture) {
+                                    LOGGER.info(
+                                            "close {} because of double net sequence error: {}",
+                                            clientFlag,
+                                            channelFuture.isSuccess());
+                                }
+                            });
         }
 
         if (result.equals(DoubleNetController.ValidResultEnum.CLOSE_BOTH)) {
-            ctx.close().addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture channelFuture) {
-                    LOGGER.info("close {} because of double net sequence error: {}", clientFlag, channelFuture.isSuccess());
-                }
-            });
+            ctx.close()
+                    .addListener(
+                            new ChannelFutureListener() {
+                                @Override
+                                public void operationComplete(ChannelFuture channelFuture) {
+                                    LOGGER.info(
+                                            "close {} because of double net sequence error: {}",
+                                            clientFlag,
+                                            channelFuture.isSuccess());
+                                }
+                            });
         }
 
         return false;

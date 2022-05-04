@@ -16,25 +16,19 @@ public class FlowController {
     private static final int MAX_SEND_WINDOW_SIZE = 255;
     private static final int MAX_COMM_WIN_SIZE = 5;
     private static final int MAX_WAITING_FOR_ACK_QUEUE_LENGTH = 50;
-    private Channel channel;
-
-    private final int ackOverTimeInterval;
-
     // 发送窗口，保存的是发送
     private final long[] sendWindow = new long[MAX_SEND_WINDOW_SIZE];
     private final long[] recWindow = new long[MAX_SEND_WINDOW_SIZE];
-
-    private final int windowSize;
-
+    private final ConcurrentLinkedQueue<WaitingAckCache> waitingAckCaches =
+            new ConcurrentLinkedQueue<WaitingAckCache>();
+    private Channel channel;
+    private int ackOverTimeInterval;
+    private int windowSize;
     private int recCount = 0;
     private long recSequence = 0;
-
     private int sendCount = 0;
     private long sendSequence = 1;
-
     private boolean isNeedReceiveAck = false;
-
-    private final ConcurrentLinkedQueue<WaitingAckCache> waitingAckCaches = new ConcurrentLinkedQueue<WaitingAckCache>();
 
     public FlowController(int ackOverTimeInterval, int windowSize) {
         this.ackOverTimeInterval = ackOverTimeInterval;
@@ -46,7 +40,8 @@ public class FlowController {
     }
 
     public synchronized void onInactive() {
-        LOGGER.info("on inactive, clear waiting ack cache, reset recCount, recSequence, sendCount to 0 and sendSequence to 1");
+        LOGGER.info(
+                "on inactive, clear waiting ack cache, reset recCount, recSequence, sendCount to 0 and sendSequence to 1");
 
         waitingAckCaches.clear();
         recCount = 0;
@@ -127,7 +122,10 @@ public class FlowController {
             WaitingAckCache cache = waitingAckCaches.poll();
             if (cache.context.channel().isActive()) {
                 cache.context.writeAndFlush(cache.data, cache.promise);
-                LOGGER.debug("after rec ack, sending cache to {}: {}", cache.context.channel(), cache.data.readableBytes());
+                LOGGER.debug(
+                        "after rec ack, sending cache to {}: {}",
+                        cache.context.channel(),
+                        cache.data.readableBytes());
             } else {
                 waitingAckCaches.clear();
             }
@@ -175,14 +173,27 @@ public class FlowController {
         LOGGER.debug("add cache, after cache size: {}", waitingAckCaches.size());
 
         if (waitingAckCaches.size() > MAX_WAITING_FOR_ACK_QUEUE_LENGTH) {
-            channel.close().addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    LOGGER.info("waiting ack cache size is more than {}, so close channel {}",
-                            MAX_WAITING_FOR_ACK_QUEUE_LENGTH, channel);
-                }
-            });
+            channel.close()
+                    .addListener(
+                            new ChannelFutureListener() {
+                                @Override
+                                public void operationComplete(ChannelFuture channelFuture)
+                                        throws Exception {
+                                    LOGGER.info(
+                                            "waiting ack cache size is more than {}, so close channel {}",
+                                            MAX_WAITING_FOR_ACK_QUEUE_LENGTH,
+                                            channel);
+                                }
+                            });
         }
+    }
+
+    public void setWindowSize(Short windowSize) {
+        this.windowSize = windowSize;
+    }
+
+    public void setAckOverTimeInterval(int ackOverTimeInterval) {
+        this.ackOverTimeInterval = ackOverTimeInterval;
     }
 
     public static class WaitingAckCache {
@@ -190,10 +201,10 @@ public class FlowController {
         private ByteBuf data;
         private ChannelPromise promise;
 
-        private WaitingAckCache() {
-        }
+        private WaitingAckCache() {}
 
-        public static WaitingAckCache create(ChannelHandlerContext context, ByteBuf data, ChannelPromise promise) {
+        public static WaitingAckCache create(
+                ChannelHandlerContext context, ByteBuf data, ChannelPromise promise) {
             WaitingAckCache cache = new WaitingAckCache();
             cache.context = context;
             cache.data = data;

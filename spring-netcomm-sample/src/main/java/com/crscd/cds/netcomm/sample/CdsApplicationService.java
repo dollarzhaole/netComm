@@ -6,9 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Created with IntelliJ IDEA.
- * Description:
- * 为了增加对依赖项common模块的扫描，需要自定义@ComponentScan
+ * Created with IntelliJ IDEA. Description: 为了增加对依赖项common模块的扫描，需要自定义@ComponentScan
  * 此时@SpringBootApplication默认扫描会失效
  *
  * @author lzy

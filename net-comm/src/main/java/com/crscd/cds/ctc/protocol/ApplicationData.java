@@ -2,9 +2,7 @@ package com.crscd.cds.ctc.protocol;
 
 import com.crscd.cds.ctc.utils.HexUtils;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author zhaole
@@ -16,7 +14,8 @@ public class ApplicationData {
     private byte[] data;
     private Collection<NetAddress> destAddresses;
 
-    public static ApplicationData create(short type, short func, byte[] data, Collection<NetAddress> dest) {
+    public static ApplicationData create(
+            short type, short func, byte[] data, Collection<NetAddress> dest) {
         ApplicationData applicationData = new ApplicationData();
         applicationData.type = type;
         applicationData.func = func;
@@ -44,8 +43,10 @@ public class ApplicationData {
 
     @Override
     public String toString() {
-        return String.format("0x%02X", type) + "-" +
-                String.format("0x%02X", func) + ": " +
-                HexUtils.bytesToHex(data);
+        return String.format("0x%02X", type)
+                + "-"
+                + String.format("0x%02X", func)
+                + ": "
+                + HexUtils.bytesToHex(data);
     }
 }
