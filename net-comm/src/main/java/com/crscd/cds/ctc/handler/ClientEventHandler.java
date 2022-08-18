@@ -52,7 +52,7 @@ public class ClientEventHandler extends SimpleChannelInboundHandler<Object> {
         LOGGER.info(">>>>>>>>> {} connected: {}", clientFlag, channelHandlerContext.channel());
         attempts = 0;
 
-        if (!registerController.isNegotiated()) {
+        if (registerController.isNegotiated()) {
             return;
         }
 
