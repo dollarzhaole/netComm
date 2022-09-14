@@ -22,15 +22,17 @@ public class DoubleNetController {
         } else {
             lastReceiveSequence2.init();
         }
+
+        lastReceiveSequence.init();
     }
 
     /**
      * 判断双网序号是否成立。有以下几种情况需要考虑 1. 双网正常 2. 只有网络1连接 3. 只启动网络1，网络2断开。网络2连接 4.
      * 只启动网络1，网络2断开。网络2连接，网络1断开，网络1连接
      *
-     * @param sequence
-     * @param flag
-     * @return
+     * @param sequence 收到的序列号
+     * @param flag 双网标记
+     * @return 根据双网规则判断
      */
     public synchronized ValidResultEnum validate(DoubleNetSequence sequence, ClientFlagEnum flag) {
         DoubleNetSequence preOneClientReceive = getReceiveSequence(flag);

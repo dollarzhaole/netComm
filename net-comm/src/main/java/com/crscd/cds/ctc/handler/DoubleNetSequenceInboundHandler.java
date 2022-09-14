@@ -39,7 +39,7 @@ public class DoubleNetSequenceInboundHandler extends ChannelInboundHandlerAdapte
         }
     }
 
-    private boolean handleDoubleNetSequence(ByteBuf msg, ChannelHandlerContext ctx) {
+    private boolean handleDoubleNetSequence(ByteBuf msg, final ChannelHandlerContext ctx) {
         if (!msg.isReadable()) {
             return false;
         }
@@ -65,7 +65,8 @@ public class DoubleNetSequenceInboundHandler extends ChannelInboundHandlerAdapte
                                 @Override
                                 public void operationComplete(ChannelFuture channelFuture) {
                                     LOGGER.info(
-                                            "close {} because of double net sequence error: {}",
+                                            "close {} of {} because of double net sequence error: {}",
+                                            ctx.channel(),
                                             clientFlag,
                                             channelFuture.isSuccess());
                                 }
@@ -79,7 +80,8 @@ public class DoubleNetSequenceInboundHandler extends ChannelInboundHandlerAdapte
                                 @Override
                                 public void operationComplete(ChannelFuture channelFuture) {
                                     LOGGER.info(
-                                            "close {} because of double net sequence error: {}",
+                                            "close {} of {} because of double net sequence error: {}",
+                                            ctx.channel(),
                                             clientFlag,
                                             channelFuture.isSuccess());
                                 }
