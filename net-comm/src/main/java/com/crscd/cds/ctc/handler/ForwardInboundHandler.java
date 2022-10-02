@@ -16,13 +16,6 @@ public class ForwardInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof ByteBuf) {
-            ByteBuf byteBuf = (ByteBuf) msg;
-
-            MessageHead message = new MessageHead();
-            message.decode(byteBuf);
-        }
-
         super.channelRead(ctx, msg);
     }
 }

@@ -1,6 +1,7 @@
 package com.crscd.cds.ctc.codec;
 
 import com.crscd.cds.ctc.controller.InboundDispatcher;
+import com.crscd.cds.ctc.protocol.MessageHead;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -29,6 +30,9 @@ public class MessageDecoder extends ByteToMessageDecoder {
             throws Exception {
         LOGGER.debug("ApplicationDataDecoder decode, byteBuf={}", byteBuf);
 
+        MessageHead message = new MessageHead();
+        message.decode(byteBuf);
+
         long bodyLen = byteBuf.readUnsignedIntLE();
         ByteBuf bodyBuf = byteBuf.readBytes((int) bodyLen);
 
@@ -38,7 +42,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
         list.add(data);
 
         if (dispatcher != null && data.length > 2) {
-            dispatcher.dispatch(data[0], data[1], data);
+            dispatcher.dispatch(data[0], data[1], data, message.getSrc());
         }
     }
 }

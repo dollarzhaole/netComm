@@ -1,5 +1,6 @@
 package com.crscd.cds.spring.netcomm.core;
 
+import com.crscd.cds.ctc.protocol.NetAddress;
 import com.crscd.cds.spring.netcomm.converter.MessageConverter;
 import com.crscd.cds.spring.netcomm.message.MessageContent;
 import org.slf4j.Logger;
@@ -63,11 +64,11 @@ public abstract class AbstractMessageListenerContainer
         this.executor = executor;
     }
 
-    public void invokeListener(byte[] message) throws Exception {
+    public void invokeListener(byte[] message, NetAddress srcAddress) throws Exception {
         MessageListener listener = getMessageListener();
         if (executor == null) {
             Object object = messageConverter.fromMessage(message, parameterType);
-            listener.onMessage(object);
+            listener.onMessage(object, srcAddress);
             return;
         }
 
@@ -76,7 +77,7 @@ public abstract class AbstractMessageListenerContainer
                     () -> {
                         try {
                             Object object = messageConverter.fromMessage(message, parameterType);
-                            listener.onMessage(object);
+                            listener.onMessage(object, srcAddress);
                         } catch (InstantiationException
                                 | InvocationTargetException
                                 | IllegalAccessException e) {

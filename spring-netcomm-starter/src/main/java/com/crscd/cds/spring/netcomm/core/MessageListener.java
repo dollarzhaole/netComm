@@ -1,5 +1,7 @@
 package com.crscd.cds.spring.netcomm.core;
 
+import com.crscd.cds.ctc.protocol.NetAddress;
+
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -10,6 +12,6 @@ import java.lang.reflect.InvocationTargetException;
  */
 @FunctionalInterface
 public interface MessageListener {
-    void onMessage(Object content)
+    void onMessage(Object content, NetAddress srcAddress)
             throws InvocationTargetException, IllegalAccessException, InstantiationException;
 }

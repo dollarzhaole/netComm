@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -185,7 +186,11 @@ public class NetCommClient {
     }
 
     public void sendData(
-            final byte[] data, final short type, final short func, DoubleNetSequence dnSeq) {
+            final byte[] data,
+            final short type,
+            final short func,
+            DoubleNetSequence dnSeq,
+            Collection<NetAddress> destAddresses) {
         if (getChannel() == null) {
             LOGGER.debug("not connected, send fail {}", channel);
             return;
@@ -196,7 +201,8 @@ public class NetCommClient {
             return;
         }
 
-        MessageHead msg = MessageHead.createApplicationData(type, func, data, localAddress);
+        MessageHead msg =
+                MessageHead.createApplicationData(type, func, data, localAddress, destAddresses);
         DoubleNetPackage pkt = DoubleNetPackage.create(dnSeq, msg);
         getChannel()
                 .writeAndFlush(pkt)
@@ -215,6 +221,10 @@ public class NetCommClient {
     }
 
     public void sendData(byte[] data, DoubleNetSequence dnSeq) {
+        sendData(data, dnSeq, null);
+    }
+
+    public void sendData(byte[] data, DoubleNetSequence dnSeq, Collection<NetAddress> destAddresses) {
         if (getChannel() == null) {
             LOGGER.debug("not connected, send failed {}", channel);
             return;
@@ -225,7 +235,7 @@ public class NetCommClient {
             return;
         }
 
-        MessageHead msg = MessageHead.createApplicationData(data, localAddress);
+        MessageHead msg = MessageHead.createApplicationData(data, localAddress, destAddresses);
         final DoubleNetPackage pkt = DoubleNetPackage.create(dnSeq, msg);
         getChannel()
                 .writeAndFlush(pkt)

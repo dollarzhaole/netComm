@@ -72,7 +72,7 @@ public class NetCommListenerAnnotationBeanPostProcessor
         Assert.isTrue(func != 0x00, "net comm message handler's func can not be default 0x00");
         SimpleMessageListenerContainer listenerContainer =
                 containerFactory.createListenerContainer(
-                        type, func, pt, message -> useMethod.invoke(bean, message));
+                        type, func, pt, (message, src) -> useMethod.invoke(bean, message, src));
         dispatcher.addListener(listenerContainer);
     }
 

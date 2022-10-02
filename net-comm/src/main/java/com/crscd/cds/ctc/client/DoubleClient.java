@@ -2,8 +2,11 @@ package com.crscd.cds.ctc.client;
 
 import com.crscd.cds.ctc.controller.DoubleNetController;
 import com.crscd.cds.ctc.protocol.DoubleNetSequence;
+import com.crscd.cds.ctc.protocol.NetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 
 /**
  * @author zhaole
@@ -46,6 +49,10 @@ public class DoubleClient {
     }
 
     public void send(byte[] data) {
+        send(data, null);
+    }
+
+    public void send(byte[] data, Collection<NetAddress> destAddresses) {
         if ((client1 == null || !client1.isActive()) && (client2 == null || !client2.isActive())) {
             return;
         }
@@ -53,28 +60,32 @@ public class DoubleClient {
         DoubleNetSequence dnSeq = doubleNetController.getSendSequence();
 
         if (client1 != null && client1.isActive()) {
-            client1.sendData(data, dnSeq);
+            client1.sendData(data, dnSeq, destAddresses);
         }
 
         if (client2 != null && client2.isActive()) {
-            client2.sendData(data, dnSeq);
+            client2.sendData(data, dnSeq, destAddresses);
+        }
+    }
+
+    public void send(byte[] data, short type, short func, Collection<NetAddress> destAddresses) {
+        if ((client1 == null || !client1.isActive()) && (client2 == null || !client2.isActive())) {
+            return;
+        }
+
+        DoubleNetSequence dnSeq = doubleNetController.getSendSequence();
+
+        if (client1 != null && client1.isActive()) {
+            client1.sendData(data, type, func, dnSeq, destAddresses);
+        }
+
+        if (client2 != null && client2.isActive()) {
+            client2.sendData(data, type, func, dnSeq, destAddresses);
         }
     }
 
     public void send(byte[] data, short type, short func) {
-        if ((client1 == null || !client1.isActive()) && (client2 == null || !client2.isActive())) {
-            return;
-        }
-
-        DoubleNetSequence dnSeq = doubleNetController.getSendSequence();
-
-        if (client1 != null && client1.isActive()) {
-            client1.sendData(data, type, func, dnSeq);
-        }
-
-        if (client2 != null && client2.isActive()) {
-            client2.sendData(data, type, func, dnSeq);
-        }
+        send(data, type, func, null);
     }
 
     public void close() {

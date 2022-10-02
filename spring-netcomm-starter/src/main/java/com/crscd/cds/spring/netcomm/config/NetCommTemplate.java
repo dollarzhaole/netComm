@@ -1,8 +1,12 @@
 package com.crscd.cds.spring.netcomm.config;
 
 import com.crscd.cds.ctc.client.DoubleClient;
+import com.crscd.cds.ctc.protocol.NetAddress;
 import com.crscd.cds.spring.netcomm.converter.MessageConverter;
 import com.crscd.cds.spring.netcomm.exception.NetCommIllegalStateException;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * @author zhaole
@@ -21,6 +25,20 @@ public class NetCommTemplate {
         byte[] message = convertMessageIfNecessary(object);
 
         sendData(message);
+    }
+
+    public void convertAndSend(Object object, Collection<NetAddress> destAddresses)
+            throws IllegalAccessException {
+        byte[] message = convertMessageIfNecessary(object);
+
+        sendData(message, destAddresses);
+    }
+
+    public void convertAndSend(Object object, NetAddress destAddress)
+            throws IllegalAccessException {
+        byte[] message = convertMessageIfNecessary(object);
+
+        sendData(message, Collections.singletonList(destAddress));
     }
 
     private byte[] convertMessageIfNecessary(Object object) throws IllegalAccessException {
@@ -46,5 +64,22 @@ public class NetCommTemplate {
 
     public void sendData(byte[] data, short type, short func) {
         client.send(data, type, func);
+    }
+
+    public void sendData(byte[] data, Collection<NetAddress> destAddresses) {
+        client.send(data, destAddresses);
+    }
+
+    public void sendData(
+            byte[] data, short type, short func, Collection<NetAddress> destAddresses) {
+        client.send(data, type, func, destAddresses);
+    }
+
+    public void sendData(byte[] data, NetAddress destAddress) {
+        sendData(data, Collections.singletonList(destAddress));
+    }
+
+    public void sendData(byte[] data, short type, short func, NetAddress destAddress) {
+        sendData(data, type, func, Collections.singletonList(destAddress));
     }
 }

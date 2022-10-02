@@ -1,6 +1,7 @@
 package com.crscd.cds.spring.netcomm.core;
 
 import com.crscd.cds.ctc.controller.InboundDispatcher;
+import com.crscd.cds.ctc.protocol.NetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ public class NetCommDispatcher implements InboundDispatcher {
     private final List<AbstractMessageListenerContainer> listenerContainers = new ArrayList<>();
 
     @Override
-    public void dispatch(short type, short func, byte[] data) throws Exception {
+    public void dispatch(short type, short func, byte[] data, NetAddress srcAddress) throws Exception {
         Optional<AbstractMessageListenerContainer> containerOptional =
                 listenerContainers.parallelStream()
                         .filter(
@@ -31,7 +32,7 @@ public class NetCommDispatcher implements InboundDispatcher {
         }
 
         AbstractMessageListenerContainer container = containerOptional.get();
-        container.invokeListener(data);
+        container.invokeListener(data, srcAddress);
     }
 
     public void addListener(AbstractMessageListenerContainer listenerContainer) {

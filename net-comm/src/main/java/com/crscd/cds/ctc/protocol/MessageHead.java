@@ -4,6 +4,8 @@ import com.crscd.cds.ctc.forward.FilterRegister;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -17,13 +19,22 @@ public class MessageHead {
     private short type;
     private short func;
     private NetAddress src;
-    private List<NetAddress> dest;
+    private Collection<NetAddress> dest;
     private List<ConditionalProperty> properties;
     private byte[] data;
 
     public static MessageHead createApplicationData(
             short type, short func, byte[] data, NetAddress src) {
-        return create(type, func, data, DataType.FORWARD, src);
+        return create(type, func, data, DataType.FORWARD, src, new ArrayList<NetAddress>());
+    }
+
+    public static MessageHead createApplicationData(
+            short type,
+            short func,
+            byte[] data,
+            NetAddress src,
+            Collection<NetAddress> destAddresses) {
+        return create(type, func, data, DataType.FORWARD, src, destAddresses);
     }
 
     public static MessageHead createApplicationData(byte[] data, NetAddress src) {
@@ -35,6 +46,18 @@ public class MessageHead {
         short func = (short) data[1];
 
         return createApplicationData(type, func, data, src);
+    }
+
+    public static MessageHead createApplicationData(
+            byte[] data, NetAddress src, Collection<NetAddress> destAddress) {
+        if (data.length < 2) {
+            return null;
+        }
+
+        short type = (short) data[0];
+        short func = (short) data[1];
+
+        return createApplicationData(type, func, data, src, destAddress);
     }
 
     public static MessageHead createRegisterMessage(FilterRegister register, NetAddress src) {
@@ -52,11 +75,16 @@ public class MessageHead {
         short type = (short) data[0];
         short func = (short) data[1];
 
-        return create(type, func, data, DataType.REGISTER, src);
+        return create(type, func, data, DataType.REGISTER, src, new ArrayList<NetAddress>());
     }
 
     private static MessageHead create(
-            short type, short func, byte[] data, short dataType, NetAddress src) {
+            short type,
+            short func,
+            byte[] data,
+            short dataType,
+            NetAddress src,
+            Collection<NetAddress> destAddresses) {
         MessageHead message = new MessageHead();
         message.setForwardType(DataType.MSGPACK_FORWARD_TYPE_BY_REG_LOCAL_DISPATCH);
         message.setData(data);
@@ -67,6 +95,7 @@ public class MessageHead {
         message.setDataType(dataType);
         message.setProtocolType(DataType.PROTOCOL_TYPE_418);
         message.setSrc(src);
+        message.setDest(destAddresses);
 
         return message;
     }
@@ -103,11 +132,11 @@ public class MessageHead {
         this.src = src;
     }
 
-    public List<NetAddress> getDest() {
+    public Collection<NetAddress> getDest() {
         return dest;
     }
 
-    public void setDest(List<NetAddress> dest) {
+    public void setDest(Collection<NetAddress> dest) {
         this.dest = dest;
     }
 
